@@ -1,0 +1,4071 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BuildCalc">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<title>Construction Calculator</title>
+<style>
+:root{
+ --gold:#f7ba2e;
+ --gold-dark:#e6a914;
+ --ink:#252525;
+ --muted:#9a9aa0;
+ --line:#e7e7ea;
+ --soft:#f7f7f8;
+ --op:#ececef;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Arial,sans-serif;background:#fff;color:var(--ink)}
+body{display:flex;justify-content:center;overflow-x:hidden}
+button,input,select{font:inherit}
+button{touch-action:manipulation}
+.app{
+ width:100%;max-width:393px;min-height:100dvh;background:#fff;
+ padding:calc(10px + env(safe-area-inset-top)) 18px calc(92px + env(safe-area-inset-bottom));
+ overflow-x:hidden;
+}
+.app-header{display:flex;align-items:flex-start;justify-content:space-between;margin:13px 4px 18px}
+.title-wrap h1{font-size:28px;line-height:1.04;margin:0;font-weight:760;letter-spacing:-.035em}
+.title-wrap p{font-size:17px;line-height:1.2;color:#777;margin:5px 0 0}
+.header-actions{display:flex;gap:10px}
+.round-icon{
+ width:42px;height:42px;border:0;border-radius:50%;background:#f5f5f6;color:#555;
+ display:grid;place-items:center;font-size:20px;
+}
+.visual-card{
+ border-radius:20px;background:#f5f5f6;padding:14px 14px 9px;
+ min-height:259px;overflow:hidden;
+}
+.visual-title{
+ font-size:11px;font-weight:750;color:#99999f;letter-spacing:.035em;text-transform:uppercase;
+}
+#modeLabel,#appStatus{display:none}
+#svg{display:block;width:100%;height:200px;overflow:hidden;pointer-events:none}
+.visual-controls{display:flex;justify-content:space-between;gap:12px;margin-top:1px}
+.visual-control{border:0;background:transparent;color:#96969b;padding:6px 0;font-size:12px;white-space:nowrap}
+.mode-strip{
+ display:flex;gap:7px;margin:9px -2px 8px;overflow-x:auto;padding:0 0 2px;
+ scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.mode-strip::-webkit-scrollbar{display:none}
+.tool-btn{
+ flex:0 0 78px;height:54px;border:1.4px solid #efb126;border-radius:10px;background:#fff;
+ color:#8f8f94;font-size:11.5px;font-weight:560;padding:0 7px;white-space:nowrap;
+}
+.tool-btn.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.entry-wrap{margin-top:4px}
+.entry-label{display:block;font-size:16px;font-weight:700;margin:5px 0 6px}
+.expression-shell{position:relative;border:1px solid #d6d6da;border-radius:10px;background:#fff}
+#expression{
+ width:100%;height:46px;border:0;background:transparent;outline:0;padding:0 42px 0 12px;
+ font-size:18px;color:#333;
+}
+#expression::placeholder{color:#c5c5c9}
+.clear-expression{
+ position:absolute;right:8px;top:8px;width:30px;height:30px;border:0;border-radius:50%;
+ background:#eeeef0;color:#aaa;font-weight:700;font-size:14px;
+}
+.live-result{display:none}
+#error{font-size:11px;color:#b44;margin:4px 2px 0;min-height:0}
+#precision{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.construction-keys{
+ display:grid;grid-template-columns:repeat(5,1fr);margin-top:12px;border-radius:12px;overflow:hidden;background:#f7f7f8;
+}
+.construction-key{
+ min-height:47px;border:0;border-right:1px solid #ececef;background:#f7f7f8;color:#333;font-size:20px;
+}
+.construction-key:last-child{border-right:0}
+.construction-key span{display:block;font-size:9px;color:#999;margin-top:3px}
+.keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+.key{
+ height:49px;border:0;border-radius:11px;background:#fafafa;color:#333;font-size:24px;font-weight:500;
+ box-shadow:0 1px 8px rgba(0,0,0,.025);
+}
+.key.operator{background:#eeeeF1;font-size:26px}
+.key.equals{background:var(--gold);color:#fff;font-weight:750}
+.key.utility{font-size:17px}
+.key.zero{grid-column:span 2}
+.key.space-key,.key.clear-key{display:none}
+.tool-panel{
+ display:none;margin:5px 0 4px;padding:11px;border:1px solid #e5e5e8;border-radius:12px;background:#fafafa;
+}
+.tool-panel.active{display:block}
+.tool-panel strong{display:block;margin-bottom:7px;font-size:14px}
+.tool-panel label{display:block;margin:7px 0 4px;color:#929298;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.tool-panel input,.tool-panel select{width:100%;height:40px;border:1px solid #d7d7db;border-radius:9px;background:white;padding:0 9px;font-size:16px}
+.tool-output{margin-top:8px;padding:9px;border-radius:9px;background:white;font-size:12px;line-height:1.45}
+.bottom-nav{
+ position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(393px,100%);
+ height:calc(78px + env(safe-area-inset-bottom));padding:7px 18px env(safe-area-inset-bottom);
+ display:grid;grid-template-columns:repeat(4,1fr);background:rgba(252,252,252,.96);
+ border-top:1px solid #f0f0f1;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:50;
+ border-radius:22px 22px 0 0;
+}
+.nav-btn{border:0;background:transparent;color:#9a9aa0;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.nav-icon{font-size:22px;line-height:1}
+.nav-btn.active{color:var(--gold-dark)}
+.sheet{position:fixed;inset:0;z-index:100;display:none}
+.sheet.open{display:block}
+#sheetBackdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(0,0,0,.22)}
+.sheet-card{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(393px,100%);max-height:74dvh;overflow:auto;background:#fff;border-radius:22px 22px 0 0;padding:12px 16px calc(18px + env(safe-area-inset-bottom))}
+.sheet-handle{width:38px;height:5px;background:#d2d2d6;border-radius:99px;margin:0 auto 12px}
+.sheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sheet-header h2{font-size:20px;margin:0}
+.sheet-close{border:0;background:#eeeef0;border-radius:50%;width:30px;height:30px;color:#777}
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-item{width:100%;border:1px solid #e4e4e7;background:#fafafa;border-radius:12px;padding:11px;text-align:left;display:flex;justify-content:space-between;gap:10px}
+.history-exp{font-size:13px;color:#666;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-res{font-size:13px;font-weight:750;white-space:nowrap}
+.empty-state{padding:28px;text-align:center;color:#999}
+.sheet-action{width:100%;height:44px;margin-top:12px;border:0;border-radius:11px;background:#f1f1f3;color:#666}
+.settings-copy{font-size:14px;line-height:1.5;color:#666}
+.settings-copy strong{color:#222}
+.settings-copy p{margin:5px 0 16px}
+@media (max-height:760px){
+ .visual-card{min-height:226px}
+ #svg{height:168px}
+ .tool-btn{height:48px}
+ .construction-key{min-height:43px}
+ .key{height:44px}
+ .app-header{margin-bottom:12px}
+}
+
+.tool-btn{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px;line-height:1.05}
+.tool-icon{width:22px;height:22px;display:block}
+.tool-icon *{vector-effect:non-scaling-stroke}
+
+
+/* v33 visual clarity */
+.visual-card{
+  min-height:285px;
+  padding:13px 12px 10px;
+}
+#svg{
+  height:225px;
+}
+.visual-title{
+  margin-bottom:2px;
+}
+.visual-controls{
+  padding-top:2px;
+}
+@media (max-height:760px){
+  .visual-card{min-height:248px}
+  #svg{height:190px}
+}
+
+
+/* v36 keypad format */
+.construction-keys{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  margin-top:12px!important;
+  border-radius:14px!important;
+  overflow:hidden!important;
+  background:#f5f5f7!important;
+  border:0!important;
+}
+.construction-key{
+  min-width:0!important;
+  height:58px!important;
+  border:0!important;
+  border-right:1px solid #e5e5e8!important;
+  border-radius:0!important;
+  background:#f5f5f7!important;
+  color:#2f3033!important;
+  font-size:21px!important;
+  font-weight:500!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:3px!important;
+  padding:0!important;
+}
+.construction-key:last-child{border-right:0!important}
+.construction-key span{
+  display:block!important;
+  margin:0!important;
+  font-size:10px!important;
+  font-weight:400!important;
+  color:#99999f!important;
+}
+
+.keypad{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin-top:10px!important;
+}
+.key{
+  height:64px!important;
+  min-width:0!important;
+  border:0!important;
+  border-radius:14px!important;
+  background:#fafafa!important;
+  color:#333438!important;
+  font-size:28px!important;
+  font-weight:400!important;
+  box-shadow:none!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+}
+.key.operator{
+  background:#eeeeF2!important;
+  font-size:28px!important;
+}
+.key.utility{
+  background:#fafafa!important;
+  color:#67676c!important;
+  font-size:20px!important;
+}
+.key.zero{
+  grid-column:span 2!important;
+}
+.key.clear-key,
+.key.space-key{
+  display:flex!important;
+}
+.key.clear-key{
+  grid-column:1!important;
+}
+.key.space-key{
+  grid-column:2!important;
+  font-size:18px!important;
+}
+.key.equals{
+  grid-column:3 / 5!important;
+  background:#F5C448!important;
+  color:#fff!important;
+  font-size:29px!important;
+  font-weight:700!important;
+}
+.key:active,
+.construction-key:active{
+  transform:scale(.98);
+}
+@media (max-width:360px){
+  .construction-key{height:54px!important;font-size:19px!important}
+  .construction-key span{font-size:9px!important}
+  .key{height:58px!important;font-size:25px!important}
+}
+
+
+/* BuildCalc v37 branding */
+:root{
+  --buildcalc-yellow:#F5C448;
+  --buildcalc-charcoal:#30343B;
+}
+.buildcalc-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.buildcalc-mark{
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  display:block;
+}
+.buildcalc-brand-copy{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-width:0;
+}
+.buildcalc-name{
+  margin:0;
+  color:#26282c;
+  font-size:25px;
+  line-height:1.02;
+  font-weight:760;
+  letter-spacing:-.7px;
+}
+.buildcalc-tagline{
+  margin-top:4px;
+  color:#929399;
+  font-size:11px;
+  line-height:1.1;
+  font-weight:500;
+}
+.key.equals{background:#F5C448!important;}
+.tool-btn.active,
+.tool-tab.active,
+.mode-btn.active,
+.bottom-nav button.active,
+.bottom-nav .active,
+.nav-item.active{
+  color:#C99C17!important;
+}
+.tool-btn.active svg,
+.tool-tab.active svg,
+.mode-btn.active svg,
+.bottom-nav button.active svg,
+.bottom-nav .active svg,
+.nav-item.active svg{
+  stroke:#C99C17!important;
+}
+
+
+/* BuildCalc v38 — white-background brand lockup */
+.buildcalc-mark-light{
+  background:#fff;
+  border-radius:0;
+}
+.buildcalc-word-build{color:#30343B;}
+.buildcalc-word-calc{color:#F5C448;}
+.buildcalc-name{
+  display:flex;
+  align-items:baseline;
+}
+
+
+/* BuildCalc v39 header refinement */
+.buildcalc-mark{
+  width:42px!important;
+  height:42px!important;
+  flex:0 0 42px!important;
+}
+.header-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+.header-actions button{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:0;
+  background:#f5f5f7;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+.settings-gear-icon{
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:#4d4f54;
+  stroke-width:1.55;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+
+/* BuildCalc v40 — exact uploaded logo */
+.buildcalc-exact-logo{
+  width:42px!important;
+  height:42px!important;
+  flex:0 0 42px!important;
+  object-fit:contain!important;
+  display:block!important;
+  background:#fff!important;
+  border:0!important;
+  border-radius:0!important;
+}
+
+
+/* BuildCalc v41 — mode-specific tool inputs */
+.tool-input-panel{
+  margin-top:14px;
+  padding:0 2px;
+}
+.tool-input-heading{
+  font-size:15px;
+  line-height:1.2;
+  font-weight:700;
+  color:#30343B;
+  margin-bottom:4px;
+}
+.tool-input-sub{
+  font-size:11px;
+  color:#97989d;
+  margin-bottom:10px;
+}
+.tool-fields{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.tool-field{
+  min-width:0;
+}
+.tool-field label{
+  display:block;
+  margin:0 0 5px 2px;
+  color:#6f7176;
+  font-size:10px;
+  font-weight:600;
+}
+.tool-field input,
+.tool-field select{
+  width:100%;
+  height:48px;
+  box-sizing:border-box;
+  border:1px solid #e8e8eb;
+  border-radius:13px;
+  background:#f7f7f9;
+  color:#30343B;
+  font-size:16px;
+  padding:0 12px;
+  outline:none;
+}
+.tool-field input:focus,
+.tool-field select:focus{
+  border-color:#F5C448;
+  box-shadow:0 0 0 2px rgba(245,196,72,.16);
+}
+.tool-field.full{grid-column:1 / -1;}
+.tool-live-note{
+  grid-column:1 / -1;
+  color:#9a9ba0;
+  font-size:10px;
+  padding:1px 2px 0;
+}
+/* v48: the BuildCalc construction keypad is shared by every tool. */
+body.special-tool-active .construction-keys,
+body.special-tool-active .keypad{
+  display:grid!important;
+}
+/* Hide the normal free-form calculator input area while a specialized tool is active. */
+body.special-tool-active .calculator-only{
+  display:none!important;
+}
+
+
+/* BuildCalc v42 — functional bottom navigation */
+.app-sheet-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:90;
+  background:rgba(25,27,30,.20);
+  backdrop-filter:blur(2px);
+}
+.app-sheet{
+  position:fixed;
+  z-index:100;
+  left:50%;
+  bottom:0;
+  width:min(393px,100%);
+  max-height:76vh;
+  overflow:auto;
+  transform:translateX(-50%);
+  box-sizing:border-box;
+  padding:8px 18px calc(22px + env(safe-area-inset-bottom));
+  background:#fff;
+  border-radius:24px 24px 0 0;
+  box-shadow:0 -12px 36px rgba(30,32,36,.13);
+}
+.sheet-handle{
+  width:38px;height:4px;border-radius:4px;background:#dedee2;margin:2px auto 16px;
+}
+.sheet-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;
+}
+.sheet-head h2{margin:0;color:#30343B;font-size:22px;letter-spacing:-.4px}
+.sheet-head p{margin:4px 0 0;color:#999aa0;font-size:11px}
+.sheet-close{
+  width:34px;height:34px;border:0;border-radius:50%;background:#f3f3f5;color:#5f6065;
+  font-size:23px;line-height:1;display:flex;align-items:center;justify-content:center;
+}
+.sheet-list{display:flex;flex-direction:column;gap:8px}
+.sheet-empty{
+  padding:30px 12px;text-align:center;background:#f8f8fa;border-radius:15px;color:#999aa0;font-size:12px;
+}
+.history-card,.saved-card{
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+  padding:12px 13px;background:#f7f7f9;border-radius:14px;
+}
+.history-expression,.saved-expression{font-size:13px;color:#55565b;overflow-wrap:anywhere}
+.history-result,.saved-result{font-size:16px;font-weight:700;color:#30343B;margin-top:3px}
+.card-actions{display:flex;gap:5px}
+.card-actions button{
+  width:34px;height:34px;border:0;border-radius:10px;background:#fff;color:#67686d;font-size:16px;
+}
+.card-actions button.save-active{color:#c89b13;background:#fff8df}
+.sheet-secondary{
+  width:100%;height:44px;margin-top:14px;border:0;border-radius:13px;background:#f2f2f4;color:#6f7075;
+  font-size:13px;font-weight:600;
+}
+.more-menu{display:flex;flex-direction:column;gap:8px}
+.more-menu button{
+  width:100%;height:52px;border:0;border-radius:14px;background:#f7f7f9;padding:0 15px;
+  display:flex;align-items:center;justify-content:space-between;color:#404146;font-size:14px;text-align:left;
+}
+.more-menu b{font-size:22px;font-weight:400;color:#aaaab0}
+.more-detail{margin-top:12px;padding:14px;border-radius:14px;background:#fff8df;color:#55565b;font-size:12px;line-height:1.5}
+.bottom-nav button.nav-functional-active,
+.bottom-nav .nav-functional-active{
+  color:#C99C17!important;
+}
+
+
+/* BuildCalc v43 — footer icons matched to approved reference */
+.bottom-nav{
+  background:#fff!important;
+}
+.bottom-nav button,
+.bottom-nav .nav-item{
+  position:relative;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:3px!important;
+  color:#5f6369!important;
+  font-size:10px!important;
+  font-weight:500!important;
+}
+.footer-icon-wrap{
+  height:23px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.footer-icon{
+  width:23px;
+  height:23px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.footer-more{
+  fill:currentColor;
+  stroke:none;
+}
+.footer-label{
+  font-size:10px;
+  line-height:1;
+}
+.bottom-nav button:first-child,
+.bottom-nav .nav-item:first-child{
+  color:#F5C448!important;
+}
+.bottom-nav button:first-child::after,
+.bottom-nav .nav-item:first-child::after{
+  content:"";
+  position:absolute;
+  left:12%;
+  right:12%;
+  bottom:0;
+  height:3px;
+  border-radius:3px;
+  background:#F5C448;
+}
+.bottom-nav button:not(:first-child)::before,
+.bottom-nav .nav-item:not(:first-child)::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:18%;
+  bottom:18%;
+  width:1px;
+  background:#ededf0;
+}
+
+
+/* BuildCalc v44 — guaranteed visible fixed bottom navigation */
+body{
+  padding-bottom:82px!important;
+}
+.buildcalc-bottom-nav{
+  position:fixed!important;
+  z-index:80!important;
+  left:50%!important;
+  bottom:0!important;
+  transform:translateX(-50%)!important;
+  width:min(393px,100vw)!important;
+  height:68px!important;
+  padding:0 6px calc(env(safe-area-inset-bottom) * .35)!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,1fr)!important;
+  background:rgba(255,255,255,.98)!important;
+  border-top:1px solid #ececef!important;
+  box-shadow:0 -3px 12px rgba(30,32,36,.04)!important;
+  overflow:visible!important;
+}
+.buildcalc-nav-item{
+  position:relative!important;
+  min-width:0!important;
+  height:67px!important;
+  border:0!important;
+  background:transparent!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  padding:4px 0 6px!important;
+  color:#5f6369!important;
+  font:inherit!important;
+}
+.buildcalc-nav-item + .buildcalc-nav-item::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:14px;
+  bottom:14px;
+  width:1px;
+  background:#ededf0;
+}
+.buildcalc-nav-item.active{
+  color:#F5C448!important;
+}
+.buildcalc-nav-item.active::after{
+  content:"";
+  position:absolute;
+  left:13%;
+  right:13%;
+  bottom:2px;
+  height:3px;
+  border-radius:3px;
+  background:#F5C448;
+}
+.buildcalc-nav-item .footer-icon-wrap{
+  width:25px!important;
+  height:25px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.buildcalc-nav-item .footer-icon{
+  width:24px!important;
+  height:24px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.7!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+.buildcalc-nav-item .footer-home{
+  fill:currentColor!important;
+  stroke:currentColor!important;
+}
+.buildcalc-nav-item .footer-more{
+  fill:currentColor!important;
+  stroke:none!important;
+}
+.buildcalc-nav-item .footer-label{
+  display:block!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:500!important;
+  color:currentColor!important;
+}
+
+
+/* BuildCalc v46 — complete Rise/Run Calculate • See • Learn */
+.riserun-results{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.riserun-result-card{
+  background:#f7f7f9;
+  border:1px solid #ececef;
+  border-radius:13px;
+  padding:10px 11px;
+}
+.riserun-result-label{
+  display:block;
+  color:#96979c;
+  font-size:9px;
+  font-weight:650;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  margin-bottom:4px;
+}
+.riserun-result-value{
+  display:block;
+  color:#30343B;
+  font-size:15px;
+  font-weight:750;
+  line-height:1.1;
+}
+.riserun-error{
+  grid-column:1 / -1;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#fff8df;
+  color:#75601c;
+  font-size:11px;
+  line-height:1.35;
+}
+.learn-toggle{
+  width:100%;
+  height:44px;
+  margin-top:10px;
+  border:1px solid #ececef;
+  border-radius:13px;
+  background:#fff;
+  color:#44464b;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 13px;
+  font-size:12px;
+  font-weight:700;
+}
+.learn-toggle .learn-chevron{
+  font-size:18px;
+  color:#999aa0;
+  transition:transform .2s ease;
+}
+.learn-toggle[aria-expanded="true"] .learn-chevron{
+  transform:rotate(180deg);
+}
+.learn-panel{
+  margin-top:8px;
+  padding:13px;
+  border-radius:14px;
+  background:#fbfbfc;
+  border:1px solid #ececef;
+}
+.learn-panel p{
+  margin:0 0 8px;
+  color:#66686d;
+  font-size:11px;
+  line-height:1.5;
+}
+.learn-panel p:last-child{margin-bottom:0}
+.learn-panel b{color:#30343B}
+.learn-formula{
+  margin:9px 0;
+  padding:9px 10px;
+  border-radius:11px;
+  background:#fff8df;
+  color:#5f521f;
+  font-size:11px;
+  font-weight:650;
+  text-align:center;
+}
+.riserun-highlight{
+  fill:#F5C448!important;
+  stroke:#C99C17!important;
+}
+
+
+/* BuildCalc v47 — tool-system bug fix */
+.tool-panel,
+.tool-panel.active{
+  display:none!important;
+}
+
+
+#toolFields input.buildcalc-keypad-target{
+  border-color:#F5C448;
+  box-shadow:0 0 0 2px rgba(245,196,72,.16);
+}
+
+
+/* v49 beta settings */
+#betaSettings{position:fixed;inset:0;z-index:9000;background:rgba(20,22,26,.28);display:none;align-items:flex-end;justify-content:center}
+#betaSettings.open{display:flex}
+.beta-settings-card{width:min(100%,430px);background:#fff;border-radius:22px 22px 0 0;padding:10px 16px 26px;box-shadow:0 -8px 30px rgba(0,0,0,.12)}
+.beta-settings-handle{width:38px;height:4px;border-radius:4px;background:#d7d7da;margin:0 auto 14px}
+.beta-settings-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.beta-settings-head h3{margin:0;font-size:20px;color:#30343B}.beta-settings-head p{margin:3px 0 0;font-size:11px;color:#92949a}
+#betaSettingsClose{width:32px;height:32px;border:0;border-radius:50%;background:#f2f2f4;font-size:20px;color:#666}
+.beta-setting-list{border:1px solid #ececef;border-radius:16px;overflow:hidden}
+.beta-row{min-height:62px;width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border:0;border-bottom:1px solid #eeeef1;background:#fff;text-align:left;color:#30343B}
+.beta-row:last-child{border-bottom:0}.beta-row-icon{width:30px;height:30px;border-radius:9px;background:#fff7dc;color:#ad8300;display:flex;align-items:center;justify-content:center;font-weight:800}
+.beta-row-copy{display:flex;flex-direction:column;gap:2px;flex:1}.beta-row-copy b{font-size:12px}.beta-row-copy small{font-size:9.5px;color:#999ba0}
+.beta-row-value{font-size:11px;color:#777980}.beta-chevron{font-size:20px;color:#bbb}
+#betaLearning{position:absolute;opacity:0}.beta-switch{width:42px;height:24px;border-radius:20px;background:#d9dade;position:relative}.beta-switch:after{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 3px #aaa;transition:.2s}
+#betaLearning:checked + .beta-switch{background:#F5C448}#betaLearning:checked + .beta-switch:after{transform:translateX(18px)}
+.beta-sub{margin-top:10px;padding:12px;border:1px solid #ececef;border-radius:14px;background:#fafafb}
+.beta-precision{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}.beta-precision button{height:34px;border:1px solid #e4e4e7;border-radius:9px;background:#fff;font-size:10px;font-weight:700}.beta-precision button.selected{background:#F5C448;border-color:#F5C448}
+#betaAbout{text-align:center;color:#555;font-size:11px}#betaAbout b{display:block;font-size:17px;color:#30343B}#betaAbout span{display:block;color:#999;font-size:10px;margin:3px 0 9px}
+body.learning-disabled #learnToggle,body.learning-disabled #learnPanel{display:none!important}
+
+/* v51 preview-safe startup */
+html,body{
+  visibility:visible!important;
+  opacity:1!important;
+}
+.app{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+#buildcalcLaunch{
+  display:none!important;
+  pointer-events:none!important;
+}
+
+
+/* v52 — safe non-blocking intro overlay */
+.buildcalc-intro{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  opacity:1;
+  transition:opacity .28s ease;
+}
+.buildcalc-intro-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  transform:scale(.96);
+  opacity:0;
+  animation:bcIntroIn .42s ease forwards;
+}
+.buildcalc-intro-logo{
+  width:84px;
+  height:84px;
+  object-fit:contain;
+  display:block;
+  margin-bottom:10px;
+}
+.buildcalc-intro-wordmark{
+  font-size:26px;
+  line-height:1;
+  letter-spacing:-.02em;
+  font-weight:800;
+  color:#30343B;
+}
+.buildcalc-intro-wordmark strong{
+  color:#F5C448;
+  font-weight:800;
+}
+.buildcalc-intro-tagline{
+  margin-top:7px;
+  font-size:10px;
+  color:#8d9096;
+  letter-spacing:.01em;
+}
+.buildcalc-intro.is-hiding{
+  opacity:0;
+}
+@keyframes bcIntroIn{
+  from{opacity:0;transform:scale(.96)}
+  to{opacity:1;transform:scale(1)}
+}
+@media (prefers-reduced-motion: reduce){
+  .buildcalc-intro-inner{animation:none;opacity:1;transform:none}
+  .buildcalc-intro{transition:none}
+}
+
+
+.beta-option-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.beta-option-list button{min-height:42px;border:1px solid #e5e5e8;border-radius:10px;background:#fff;color:#4e5055;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.beta-option-list button small{font-size:9px;font-weight:500;color:#999ba0}
+.beta-option-list button.selected{background:#fff8df;border-color:#F5C448;color:#3d3f43}
+
+/* v54 — Material tool */
+.material-results{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.material-card{
+  background:#f7f7f9;
+  border:1px solid #ececef;
+  border-radius:13px;
+  padding:10px 11px;
+}
+.material-card.wide{grid-column:1/-1}
+.material-label{
+  display:block;
+  color:#96979c;
+  font-size:9px;
+  font-weight:650;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  margin-bottom:4px;
+}
+.material-value{
+  display:block;
+  color:#30343B;
+  font-size:15px;
+  font-weight:750;
+  line-height:1.15;
+}
+.material-helper{
+  font-size:10px;
+  color:#8b8d92;
+  line-height:1.4;
+}
+.material-selector{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-bottom:2px;
+}
+.material-selector button{
+  height:38px;
+  border:1px solid #e6e6e9;
+  border-radius:10px;
+  background:#fff;
+  color:#66686d;
+  font-size:11px;
+  font-weight:700;
+}
+.material-selector button.active{
+  background:#F5C448;
+  border-color:#F5C448;
+  color:#30343B;
+}
+
+
+/* v55 Material input polish */
+body.special-tool-active #toolInputPanel{display:block}
+#toolFields .tool-field{min-width:0}
+#toolFields .tool-field input{
+  width:100%;
+  box-sizing:border-box;
+  min-height:44px;
+}
+#toolFields .material-selector{order:-1}
+
+</style>
+
+<style>
+/* v60 — hard result ownership gate.
+   These rules override any legacy script that tries to re-show stale results. */
+#riseRunResults,
+#materialResults,
+#spacingResults,
+#learnToggle,
+#learnPanel{
+  display:none !important;
+}
+
+/* Rise / Run owns only Rise / Run results + Learn */
+body:has(.tool-btn[data-tool="riseRun"].active) #riseRunResults{
+  display:grid !important;
+}
+body:has(.tool-btn[data-tool="riseRun"].active) #learnToggle:not([hidden]){
+  display:flex !important;
+}
+body:has(.tool-btn[data-tool="riseRun"].active) #learnPanel:not([hidden]){
+  display:block !important;
+}
+
+/* Material owns only Material results */
+body:has(.tool-btn[data-tool="waste"].active) #materialResults{
+  display:grid !important;
+}
+
+/* Spacing owns only Spacing results */
+body:has(.tool-btn[data-tool="spacing"].active) #spacingResults{
+  display:grid !important;
+}
+</style>
+
+
+<style>
+body[data-buildcalc-tool]:not([data-buildcalc-tool="riserun"]) #riseRunResults,
+body[data-buildcalc-tool]:not([data-buildcalc-tool="riserun"]) #learnToggle,
+body[data-buildcalc-tool]:not([data-buildcalc-tool="riserun"]) #learnPanel{
+  display:none !important;
+}
+body[data-buildcalc-tool]:not([data-buildcalc-tool="material"]) #materialResults{
+  display:none !important;
+}
+body[data-buildcalc-tool]:not([data-buildcalc-tool="spacing"]) #spacingResults{
+  display:none !important;
+}
+</style>
+
+
+<style>
+/* v61 — Material modes */
+#materialModeSelector button{
+  min-width:0;
+  padding:0 5px;
+  font-size:10px;
+}
+</style>
+
+
+<style>
+/* v62 — Material live visual */
+body[data-buildcalc-tool="material"] .visual-card{
+  background:#f6f6f7;
+}
+</style>
+
+
+<style>
+/* v63 — guided openings + concrete isometric visual */
+.material-opening-assist{
+  grid-column:1/-1;
+  border:1px solid #ececef;
+  border-radius:12px;
+  background:#fafafa;
+  padding:9px;
+  margin-top:2px;
+}
+.material-opening-title{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:7px;
+}
+.material-opening-title strong{
+  font-size:10px;
+  color:#66686d;
+  letter-spacing:.02em;
+}
+.material-opening-title span{
+  font-size:9px;
+  color:#9a9ca1;
+}
+.material-opening-types{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+.material-opening-type{
+  min-width:0;
+  min-height:48px;
+  border:1px solid #e4e4e7;
+  border-radius:10px;
+  background:#fff;
+  color:#66686d;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:5px 4px;
+  font-size:10px;
+  font-weight:700;
+}
+.material-opening-type svg{
+  width:17px;
+  height:17px;
+  flex:0 0 auto;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.6;
+}
+.material-opening-type.active{
+  background:#fff8df;
+  border-color:#F5C448;
+  color:#3d3f43;
+}
+.material-opening-dims{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:7px;
+}
+.material-opening-dims.arch-mode{
+  grid-template-columns:1fr 1fr 1fr;
+}
+.material-opening-dims label{
+  display:block;
+  margin:0 0 4px;
+  font-size:9px;
+  color:#96979c;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.035em;
+}
+.material-opening-dims input{
+  width:100%;
+  min-height:40px;
+  border:1px solid #d7d7db;
+  border-radius:9px;
+  background:#fff;
+  padding:0 8px;
+  color:#333;
+  font-size:16px;
+}
+.material-opening-summary{
+  margin-top:6px;
+  font-size:9.5px;
+  color:#8a8c91;
+  line-height:1.35;
+}
+</style>
+
+
+<style>
+/* v65 — Appearance: Light / Dark / System */
+:root{
+  --bc-bg:#ffffff;
+  --bc-surface:#ffffff;
+  --bc-surface-soft:#f5f5f6;
+  --bc-text:#2f3135;
+  --bc-muted:#7c7f85;
+  --bc-line:#e5e5e8;
+  --bc-input:#ffffff;
+  --bc-visual:#f7f7f8;
+}
+html[data-bc-theme="dark"]{
+  --bc-bg:#151618;
+  --bc-surface:#1c1e21;
+  --bc-surface-soft:#23262a;
+  --bc-text:#f2f2f2;
+  --bc-muted:#a8abb1;
+  --bc-line:#35383d;
+  --bc-input:#202327;
+  --bc-visual:#1b1d20;
+}
+html[data-bc-theme="dark"] body{
+  background:var(--bc-bg)!important;
+  color:var(--bc-text)!important;
+}
+html[data-bc-theme="dark"] .app,
+html[data-bc-theme="dark"] .shell,
+html[data-bc-theme="dark"] .main,
+html[data-bc-theme="dark"] header,
+html[data-bc-theme="dark"] .header,
+html[data-bc-theme="dark"] .bottom-nav,
+html[data-bc-theme="dark"] .sheet,
+html[data-bc-theme="dark"] .settings-sheet{
+  background:var(--bc-bg)!important;
+  color:var(--bc-text)!important;
+}
+html[data-bc-theme="dark"] .visual-card,
+html[data-bc-theme="dark"] .tool-fields,
+html[data-bc-theme="dark"] .material-opening-assist,
+html[data-bc-theme="dark"] .material-card,
+html[data-bc-theme="dark"] .result-card,
+html[data-bc-theme="dark"] .history-item,
+html[data-bc-theme="dark"] .saved-item{
+  background:var(--bc-surface)!important;
+  border-color:var(--bc-line)!important;
+  color:var(--bc-text)!important;
+}
+html[data-bc-theme="dark"] input,
+html[data-bc-theme="dark"] select,
+html[data-bc-theme="dark"] textarea,
+html[data-bc-theme="dark"] .calc-input{
+  background:var(--bc-input)!important;
+  color:var(--bc-text)!important;
+  border-color:var(--bc-line)!important;
+}
+html[data-bc-theme="dark"] .tool-btn,
+html[data-bc-theme="dark"] .nav-btn,
+html[data-bc-theme="dark"] .material-opening-type,
+html[data-bc-theme="dark"] .material-selector button{
+  color:var(--bc-muted);
+}
+html[data-bc-theme="dark"] .tool-btn.active,
+html[data-bc-theme="dark"] .nav-btn.active,
+html[data-bc-theme="dark"] .material-opening-type.active,
+html[data-bc-theme="dark"] .material-selector button.active{
+  color:var(--bc-text);
+}
+html[data-bc-theme="dark"] svg text{
+  fill:#d7d9dd;
+}
+html[data-bc-theme="dark"] .visual-card svg{
+  background:var(--bc-visual);
+}
+html[data-bc-theme="dark"] .material-opening-title strong,
+html[data-bc-theme="dark"] .material-label,
+html[data-bc-theme="dark"] .result-label{
+  color:#c9ccd1!important;
+}
+html[data-bc-theme="dark"] .material-opening-title span,
+html[data-bc-theme="dark"] .material-opening-summary,
+html[data-bc-theme="dark"] .material-helper,
+html[data-bc-theme="dark"] .helper,
+html[data-bc-theme="dark"] .muted{
+  color:var(--bc-muted)!important;
+}
+.appearance-setting{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-top:8px;
+}
+.appearance-option{
+  border:1px solid #e3e3e6;
+  background:#fff;
+  color:#5e6065;
+  border-radius:10px;
+  padding:9px 6px;
+  font-size:11px;
+  font-weight:700;
+}
+.appearance-option.active{
+  border-color:#F5C448;
+  background:#fff8df;
+  color:#313338;
+}
+html[data-bc-theme="dark"] .appearance-option{
+  background:#202327;
+  border-color:#3a3d42;
+  color:#aeb1b6;
+}
+html[data-bc-theme="dark"] .appearance-option.active{
+  background:#3a3420;
+  border-color:#F5C448;
+  color:#f4f4f4;
+}
+</style>
+
+
+<style>
+/* v66 — reliability pass */
+#stairsResults,#roofResults{
+  display:none !important;
+}
+body:has(.tool-btn[data-tool="stairs"].active) #stairsResults,
+body[data-buildcalc-tool="stairs"] #stairsResults{
+  display:grid !important;
+}
+body:has(.tool-btn[data-tool="roof"].active) #roofResults,
+body[data-buildcalc-tool="roof"] #roofResults{
+  display:grid !important;
+}
+.buildcalc-special-results{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:10px 0 0;
+}
+.buildcalc-special-results .material-card{min-width:0}
+html[data-bc-theme="dark"] .visual-card svg [stroke="#222"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#555"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#666"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#707075"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#68686d"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#777"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#858589"]{
+  stroke:#d8dadd !important;
+}
+html[data-bc-theme="dark"] .visual-card svg [stroke="#999"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#bbb"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#b7b7bb"],
+html[data-bc-theme="dark"] .visual-card svg [stroke="#c4c4c8"]{
+  stroke:#747981 !important;
+}
+html[data-bc-theme="dark"] .visual-card svg [fill="#fbfbfb"],
+html[data-bc-theme="dark"] .visual-card svg [fill="#fafafa"],
+html[data-bc-theme="dark"] .visual-card svg [fill="#f5f5f6"]{
+  fill:#24272b !important;
+}
+html[data-bc-theme="dark"] .visual-card svg .total-label,
+html[data-bc-theme="dark"] .visual-card svg .segment-label{
+  fill:#e5e6e8 !important;
+}
+</style>
+
+
+<style>
+/* v67 — iPhone/PWA readiness */
+html,body{
+  width:100%;
+  min-height:100%;
+  overscroll-behavior-y:none;
+  -webkit-text-size-adjust:100%;
+  -webkit-tap-highlight-color:transparent;
+}
+body{
+  margin:0;
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+  background:var(--bc-bg,#fff);
+}
+button,input,select,textarea{
+  font:inherit;
+}
+button,.tool-btn,.nav-btn,[data-key],.appearance-option,.material-opening-type{
+  touch-action:manipulation;
+}
+input,textarea,select{
+  font-size:16px !important; /* prevents Safari auto-zoom on focus */
+}
+.bottom-nav{
+  padding-bottom:max(8px, env(safe-area-inset-bottom)) !important;
+  min-height:calc(62px + env(safe-area-inset-bottom));
+}
+.app,.shell,.main{
+  max-width:430px;
+  margin-left:auto;
+  margin-right:auto;
+}
+@media (max-width:430px){
+  .visual-card{
+    min-height:250px;
+  }
+  .tool-strip{
+    overflow-x:auto;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .tool-strip::-webkit-scrollbar{display:none}
+  .tool-btn{
+    flex:0 0 auto;
+  }
+  .buildcalc-special-results,
+  .material-results{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width:360px){
+  .buildcalc-special-results,
+  .material-results{
+    grid-template-columns:1fr !important;
+  }
+}
+</style>
+
+</head>
+<body>
+<div id="buildcalcIntro" class="buildcalc-intro" aria-hidden="true">
+  <div class="buildcalc-intro-inner">
+    <img class="buildcalc-intro-logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAeAB4AAD/4QMERXhpZgAATU0AKgAAAAgABAE7AAIAAAATAAABSodpAAQAAAABAAABXpydAAEAAAAmAAAC1uocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQWxleGFuZGVyIEFsdmFyYWRvAAAABZADAAIAAAAUAAACrJAEAAIAAAAUAAACwJKRAAIAAAADNzgAAJKSAAIAAAADNzgAAOocAAcAAAEMAAABoAAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyNjowOTowNyAxMjoyNzozMwAyMDI2OjA5OjA3IDEyOjI3OjMzAAAAQQBsAGUAeABhAG4AZABlAHIAIABBAGwAdgBhAHIAYQBkAG8AAAD/4QQlaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49J++7vycgaWQ9J1c1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCc/Pg0KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyI+PHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj48cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0idXVpZDpmYWY1YmRkNS1iYTNkLTExZGEtYWQzMS1kMzNkNzUxODJmMWIiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIvPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIj48eG1wOkNyZWF0ZURhdGU+MjAyNi0wOS0wN1QxMjoyNzozMy43NzY8L3htcDpDcmVhdGVEYXRlPjwvcmRmOkRlc2NyaXB0aW9uPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIj48ZGM6Y3JlYXRvcj48cmRmOlNlcSB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6bGk+QWxleGFuZGVyIEFsdmFyYWRvPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8P3hwYWNrZXQgZW5kPSd3Jz8+/9sAQwAHBQUGBQQHBgUGCAcHCAoRCwoJCQoVDxAMERgVGhkYFRgXGx4nIRsdJR0XGCIuIiUoKSssKxogLzMvKjInKisq/9sAQwEHCAgKCQoUCwsUKhwYHCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq/8AAEQgBkwFzAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+kKKKKACiiigAooooAKKKKAEpaKKACiiigAooooAKKKKACiiigAooooAKKKKACiijIoAKKMiigAooooAKKSloAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooASloooAKKKKACiiigApGYIpZjgAZJpapawSNIuMcfJWVap7OnKfZNlQjzSUe5lXXina7LaxAgdGY9fwrPk8Q38nSRU/3V/xrLor86rZpjKr1m16aH0kMLRgtIlt9UvZPvXMn4Nj+VRG7uT1uJf++zUNLXDK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" alt="">
+    <div class="buildcalc-intro-wordmark"><span>Build</span><strong>Calc</strong></div>
+    <div class="buildcalc-intro-tagline">Visual Construction Calculator</div>
+  </div>
+</div>
+
+
+
+</div>
+
+<main class="app">
+<header class="app-header">
+  
+<div class="buildcalc-brand">
+  
+<img class="buildcalc-mark buildcalc-exact-logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAeAB4AAD/4QMERXhpZgAATU0AKgAAAAgABAE7AAIAAAATAAABSodpAAQAAAABAAABXpydAAEAAAAmAAAC1uocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQWxleGFuZGVyIEFsdmFyYWRvAAAABZADAAIAAAAUAAACrJAEAAIAAAAUAAACwJKRAAIAAAADNzgAAJKSAAIAAAADNzgAAOocAAcAAAEMAAABoAAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyNjowOTowNyAxMjoyNzozMwAyMDI2OjA5OjA3IDEyOjI3OjMzAAAAQQBsAGUAeABhAG4AZABlAHIAIABBAGwAdgBhAHIAYQBkAG8AAAD/4QQlaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49J++7vycgaWQ9J1c1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCc/Pg0KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyI+PHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj48cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0idXVpZDpmYWY1YmRkNS1iYTNkLTExZGEtYWQzMS1kMzNkNzUxODJmMWIiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIvPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIj48eG1wOkNyZWF0ZURhdGU+MjAyNi0wOS0wN1QxMjoyNzozMy43NzY8L3htcDpDcmVhdGVEYXRlPjwvcmRmOkRlc2NyaXB0aW9uPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIj48ZGM6Y3JlYXRvcj48cmRmOlNlcSB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6bGk+QWxleGFuZGVyIEFsdmFyYWRvPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8P3hwYWNrZXQgZW5kPSd3Jz8+/9sAQwAHBQUGBQQHBgUGCAcHCAoRCwoJCQoVDxAMERgVGhkYFRgXGx4nIRsdJR0XGCIuIiUoKSssKxogLzMvKjInKisq/9sAQwEHCAgKCQoUCwsUKhwYHCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq/8AAEQgBkwFzAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+kKKKKACiiigAooooAKKKKAEpaKKACiiigAooooAKKKKACiiigAooooAKKKKACiijIoAKKMiigAooooAKKSloAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooASloooAKKKKACiiigApGYIpZjgAZJpapawSNIuMcfJWVap7OnKfZNlQjzSUe5lXXina7LaxAgdGY9fwrPk8Q38nSRU/3V/xrLor86rZpjKr1m16aH0kMLRgtIlt9UvZPvXMn4Nj+VRG7uT1uJf++zUNLXDK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" alt="BuildCalc logo">
+
+  <div class="buildcalc-brand-copy">
+    <div class="buildcalc-name"><span class="buildcalc-word-build">Build</span><span class="buildcalc-word-calc">Calc</span></div>
+    <div class="buildcalc-tagline">Visual Construction Calculator</div>
+  </div>
+</div>
+
+<div class="header-actions">
+   
+   <button type="button" class="round-icon" id="topSettings" aria-label="Settings">
+<svg class="settings-gear-icon" viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z"/>
+  <path d="M19.1 13.5a7.7 7.7 0 0 0 .05-3l2-1.55-2-3.46-2.46 1a8.3 8.3 0 0 0-2.59-1.5L13.75 2h-4l-.35 2.99a8.3 8.3 0 0 0-2.59 1.5l-2.46-1-2 3.46 2 1.55a7.7 7.7 0 0 0 .05 3l-2.05 1.55 2 3.46 2.5-1a8.1 8.1 0 0 0 2.55 1.48L9.75 22h4l.35-3.01a8.1 8.1 0 0 0 2.55-1.48l2.5 1 2-3.46-2.05-1.55Z"/>
+</svg>
+</button>
+  </div>
+ </header>
+
+ <section class="visual-card">
+  <div class="visual-title">Construction Calculator Visual <span id="modeLabel">Calculator</span><span id="appStatus">Ready</span></div>
+  <svg id="svg" viewBox="0 0 700 290" aria-label="Live construction visual"><g id="viz"></g></svg>
+  <div class="visual-controls">
+   <button type="button" id="precisionQuick" class="visual-control">Round to: 1/16″⌄</button>
+   <button type="button" id="scaleQuick" class="visual-control">Scale: 1/2″ = 1′ - 0″⌄</button>
+  </div>
+ </section>
+
+ <nav class="mode-strip" aria-label="Construction calculators">
+  <button type="button" class="tool-btn active" data-tool="calculator"><svg class="tool-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="6" width="8" height="3" rx=".7" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 13h2m4 0h2M9 12v2m6-2v2M8 17h2m4 0h2" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span>Calculator</span></button>
+  <button type="button" class="tool-btn" data-tool="riseRun"><svg class="tool-icon" viewBox="0 0 24 24"><path d="M4 19h16L8 6z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 19v-3h3" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span>Rise/Run</span></button>
+  <button type="button" class="tool-btn" data-tool="waste"><svg class="tool-icon" viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 12l8 4 8-4M4 16l8 4 8-4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg><span>Material</span></button>
+  <button type="button" class="tool-btn" data-tool="stairs"><svg class="tool-icon" viewBox="0 0 24 24"><path d="M4 19h5v-4h4v-4h4V7h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Stairs</span></button>
+  <button type="button" class="tool-btn" data-tool="roof"><svg class="tool-icon" viewBox="0 0 24 24"><path d="M3 19L12 6l9 13M6 19h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 6v13" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".7"/></svg><span>Roof/Rafter</span></button>
+  <button type="button" class="tool-btn" data-tool="spacing"><svg class="tool-icon" viewBox="0 0 24 24"><path d="M5 4v16M9 4v16M15 4v16M19 4v16M3 5h18M3 19h18" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span>Spacing</span></button>
+  
+  
+ </nav>
+
+ 
+<section id="toolInputPanel" class="tool-input-panel" hidden>
+  <div class="tool-input-heading" id="toolInputHeading">Rise / Run</div>
+  <div class="tool-input-sub" id="toolInputSub">Enter the dimensions for this construction calculation.</div>
+  <div class="tool-fields" id="toolFields"></div>
+  <div id="riseRunResults" class="riserun-results" hidden></div>
+  <div id="materialResults" class="material-results" hidden></div>
+  <div id="spacingResults" class="material-results" hidden></div>
+  <button type="button" id="learnToggle" class="learn-toggle" hidden aria-expanded="false">
+    <span>Learn</span><span class="learn-chevron">⌄</span>
+  </button>
+  <div id="learnPanel" class="learn-panel" hidden>
+    <p><b>Rise</b> is the vertical change.</p>
+    <p><b>Run</b> is the horizontal distance.</p>
+    <div class="learn-formula">Diagonal = √(Rise² + Run²)</div>
+    <p><b>Angle</b> shows how steep the slope is. <b>Slope %</b> compares rise to run as a percentage.</p>
+  </div>
+
+</section>
+
+<section class="entry-wrap calculator-only">
+  <label class="entry-label" for="expression">Enter Calculation</label>
+  <div class="expression-shell">
+   <input id="expression" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" inputmode="none" placeholder="e.g. 12′ - 6″ + 3′ - 4″" value="">
+   <button type="button" class="clear-expression" data-key="C" aria-label="Clear">×</button>
+  </div>
+  <div class="live-result">
+   <div><div id="answer">—</div></div><div id="meta"></div>
+  </div>
+  <div id="error"></div>
+ </section>
+
+ <select id="precision" aria-label="Rounding precision">
+  <option value="2">1/2"</option><option value="4">1/4"</option><option value="8">1/8"</option><option value="16" selected>1/16"</option><option value="32">1/32"</option>
+ </select>
+
+ <section id="riseRun" class="tool-panel">
+  <strong>Rise / Run</strong>
+  <label for="riseInput">Rise</label><input id="riseInput" value='6"'>
+  <label for="runInput">Run</label><input id="runInput" value='12"'>
+  <div class="tool-output" id="riseRunOut"></div>
+ </section>
+ <section id="stairs" class="tool-panel">
+  <strong>Stair Calculator</strong>
+  <label for="stairTotalRise">Total floor-to-floor rise</label><input id="stairTotalRise" value="9'">
+  <label for="stairTargetRiser">Target riser</label><input id="stairTargetRiser" value='7 1/2"'>
+  <label for="stairTread">Tread depth</label><input id="stairTread" value='10"'>
+  <div class="tool-output" id="stairsOut"></div>
+ </section>
+ <section id="roof" class="tool-panel">
+  <strong>Roof / Rafter Calculator</strong>
+  <label for="roofSpan">Building span</label><input id="roofSpan" value="24'">
+  <label for="roofPitch">Roof pitch</label>
+  <select id="roofPitch"><option value="2">2:12</option><option value="3">3:12</option><option value="4" selected>4:12</option><option value="5">5:12</option><option value="6">6:12</option><option value="7">7:12</option><option value="8">8:12</option><option value="9">9:12</option><option value="10">10:12</option><option value="12">12:12</option></select>
+  <label for="roofOverhang">Overhang</label><input id="roofOverhang" value='12"'>
+  <div class="tool-output" id="roofOut"></div>
+ </section>
+ <section id="spacing" class="tool-panel">
+  <strong>Spacing</strong>
+  <label for="spacingLength">Total length</label><input id="spacingLength" value="16'">
+  <label for="spacingOC">Spacing O.C.</label><input id="spacingOC" value='16"'>
+  <div class="tool-output" id="spacingOut"></div>
+ </section>
+ <section id="waste" class="tool-panel">
+  <strong>Waste Factor</strong>
+  <label for="wasteBase">Base quantity / area</label><input id="wasteBase" value="500">
+  <label for="wastePct">Waste %</label><input id="wastePct" value="10">
+  <div class="tool-output" id="wasteOut"></div>
+ </section>
+ <section id="scale" class="tool-panel">
+  <strong>Drawing Scale</strong>
+  <label for="scaleDrawing">Drawing inches</label><input id="scaleDrawing" value="3">
+  <label for="scaleRatio">Scale</label>
+  <select id="scaleRatio"><option value="24" selected>1/2" = 1'-0"</option><option value="48">1/4" = 1'-0"</option><option value="96">1/8" = 1'-0"</option></select>
+  <div class="tool-output" id="scaleOut"></div>
+ </section>
+
+ <div class="construction-keys">
+  <button type="button" class="construction-key" data-key="'">′<span>Feet</span></button>
+  <button type="button" class="construction-key" data-key='"'>″<span>Inches</span></button>
+  <button type="button" class="construction-key" data-key="/">⁄<span>Fraction</span></button>
+  <button type="button" class="construction-key" data-key="(">（ ）<span>Parentheses</span></button>
+  <button type="button" class="construction-key" data-key=".">·<span>Decimal</span></button>
+ </div>
+
+ 
+<section class="keypad" aria-label="Calculator keypad">
+  <button type="button" class="key" data-key="7">7</button>
+  <button type="button" class="key" data-key="8">8</button>
+  <button type="button" class="key" data-key="9">9</button>
+  <button type="button" class="key operator" data-key="÷">÷</button>
+
+  <button type="button" class="key" data-key="4">4</button>
+  <button type="button" class="key" data-key="5">5</button>
+  <button type="button" class="key" data-key="6">6</button>
+  <button type="button" class="key operator" data-key="×">×</button>
+
+  <button type="button" class="key" data-key="1">1</button>
+  <button type="button" class="key" data-key="2">2</button>
+  <button type="button" class="key" data-key="3">3</button>
+  <button type="button" class="key operator" data-key="−">−</button>
+
+  <button type="button" class="key zero" data-key="0">0</button>
+  <button type="button" class="key utility" data-key="⌫" aria-label="Backspace">⌫</button>
+  <button type="button" class="key operator" data-key="+">+</button>
+
+  <button type="button" class="key utility clear-key" data-key="C">C</button>
+  <button type="button" class="key space-key" data-key=" ">Space</button>
+  <button type="button" class="key equals" data-key="=">=</button>
+</section>
+
+</main>
+
+
+
+<div class="sheet" id="appSheet">
+ <button type="button" id="sheetBackdrop" aria-label="Close"></button>
+ <section class="sheet-card">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><h2 id="sheetTitle">Sheet</h2><button type="button" id="sheetClose" class="sheet-close">×</button></div>
+  <div id="sheetBody"></div>
+ </section>
+</div>
+
+<script>
+
+
+
+
+
+const input=document.getElementById("expression"), precision=document.getElementById("precision");
+const answer=document.getElementById("answer"), meta=document.getElementById("meta"), error=document.getElementById("error"), viz=document.getElementById("viz");
+let historyItems=[], lastHistoryKey="", activeMode="calculator";
+
+function mixed(t){
+ t=t.trim(); if(!t)return 0;
+ let m=t.match(/^(\d+(?:\.\d+)?)\s+(\d+)\s*\/\s*(\d+)$/);
+ if(m){let d=+m[3];return d?+m[1]+(+m[2]/d):NaN}
+ m=t.match(/^(\d+)\s*\/\s*(\d+)$/); if(m)return +m[2]?+m[1]/+m[2]:NaN;
+ let n=Number(t);return Number.isFinite(n)?n:NaN;
+}
+function parseToken(raw){
+ let s=raw.trim()
+   .replace(/[′’‘‛`]/g,"'")
+   .replace(/[″”“‟]/g,'"')
+   .replace(/\u00A0/g," ")
+   .replace(/\s+/g," ");
+ if(!s)return null;
+ if(s.includes("'")||s.includes('"')){
+   if(s.includes("'")){
+     let i=s.indexOf("'"),ft=Number(s.slice(0,i).trim()),rest=s.slice(i+1).trim().replace(/^-\s*/,"").replace(/"/g,"").trim();
+     if(!Number.isFinite(ft))return null; let inches=rest?mixed(rest):0; if(!Number.isFinite(inches))return null;
+     return {value:ft+inches/12,power:1,label:s};
+   }
+   let inches=mixed(s.replace(/"/g,"")); if(!Number.isFinite(inches))return null;
+   return {value:inches/12,power:1,label:s};
+ }
+ let n=Number(s); if(!Number.isFinite(n))return null; return {value:n,power:0,label:s};
+}
+function normalizeExpression(raw){
+ return raw
+   .replace(/[′’‘‛`]/g,"'")
+   .replace(/[″”“‟]/g,'"')
+   .replace(/[×✕]/g,"*")
+   .replace(/[÷]/g,"/")
+   .replace(/[−–—]/g,"-")
+   .replace(/(\d+(?:\.\d+)?)'\s*-\s*(?=\d)/g,"$1' ");
+}
+function tokenize(raw){
+ let s=normalizeExpression(raw).trim(); if(!s)return [];
+ let tokens=[],cur="";
+ function flush(){if(cur.trim()){tokens.push({type:"value",text:cur.trim()});cur=""}}
+ for(let i=0;i<s.length;i++){
+   const ch=s[i];
+   if(ch==="("||ch===")"){
+     flush(); tokens.push({type:"paren",paren:ch}); continue;
+   }
+   if("+-*/".includes(ch)){
+     // A minus immediately after a foot mark belongs to feet-inch notation.
+     if(ch==="-" && cur.trim().endsWith("'")){cur+=" ";continue}
+     flush(); tokens.push({type:"op",op:ch}); continue;
+   }
+   cur+=ch;
+ }
+ flush();
+ return tokens;
+}
+function evaluate(raw){
+ const toks=tokenize(raw); if(!toks.length)return null;
+ const output=[], ops=[];
+ const prec={"+":1,"-":1,"*":2,"/":2};
+
+ for(const t of toks){
+   if(t.type==="value"){
+     const d=parseToken(t.text); if(!d)return null;
+     output.push({type:"value",data:d});
+   }else if(t.type==="op"){
+     while(ops.length && ops[ops.length-1].type==="op" &&
+           prec[ops[ops.length-1].op]>=prec[t.op]) output.push(ops.pop());
+     ops.push(t);
+   }else if(t.type==="paren" && t.paren==="("){
+     ops.push(t);
+   }else if(t.type==="paren" && t.paren===")"){
+     let matched=false;
+     while(ops.length){
+       const top=ops.pop();
+       if(top.type==="paren" && top.paren==="("){matched=true;break}
+       output.push(top);
+     }
+     if(!matched)return null;
+   }
+ }
+ while(ops.length){
+   const top=ops.pop();
+   if(top.type==="paren")return null;
+   output.push(top);
+ }
+
+ const stack=[];
+ for(const t of output){
+   if(t.type==="value"){stack.push({value:t.data.value,power:t.data.power});continue}
+   if(stack.length<2)return null;
+   const b=stack.pop(),a=stack.pop();
+   let value,power;
+   if(t.op==="+"||t.op==="-"){
+     if(a.power!==b.power)return null;
+     value=t.op==="+"?a.value+b.value:a.value-b.value; power=a.power;
+   }else if(t.op==="*"){
+     value=a.value*b.value; power=a.power+b.power;
+   }else{
+     if(b.value===0)return null;
+     value=a.value/b.value; power=a.power-b.power;
+   }
+   stack.push({value,power});
+ }
+ if(stack.length!==1)return null;
+ return {value:stack[0].value,power:stack[0].power,parts:[],ops:[]};
+}
+function gcd(a,b){while(b){let t=b;b=a%b;a=t}return a}
+function fmtLength(ft){
+ let den=Number(precision.value),neg=ft<0;ft=Math.abs(ft);
+ let totalUnits=Math.round(ft*12*den),feet=Math.floor(totalUnits/(12*den)),rem=totalUnits-feet*12*den,inch=Math.floor(rem/den),f=rem%den;
+ let frac="";if(f){let g=gcd(f,den);frac=(f/g)+"/"+(den/g)}
+ return (neg?"-":"")+feet+"'-"+inch+(frac?" "+frac:"")+'"';
+}
+function fmtResult(d){
+  const units=(document.body&&document.body.dataset.units)||localStorage.getItem("bc-units")||"ftin";
+  if(d.power===1){
+    if(units==="decimalft") return `${d.value.toFixed(3).replace(/\.?0+$/,"")} ft`;
+    if(units==="inches") return `${(d.value*12).toFixed(3).replace(/\.?0+$/,"")} in`;
+    return fmtLength(d.value);
+  }
+  if(d.power===2){
+    if(units==="inches") return `${(d.value*144).toFixed(2).replace(/\.?0+$/,"")} in²`;
+    return `${d.value.toFixed(2).replace(/\.?0+$/,"")} SF`;
+  }
+  if(d.power===3){
+    if(units==="inches") return `${(d.value*1728).toFixed(2).replace(/\.?0+$/,"")} in³`;
+    return `${d.value.toFixed(2).replace(/\.?0+$/,"")} CF`;
+  }
+  return `${d.value.toFixed(4).replace(/\.?0+$/,"")}`;
+}
+
+function svgDefs(){
+ return `
+ <defs>
+   <pattern id="woodHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(25)">
+     <line x1="0" y1="0" x2="0" y2="8" stroke="#b8b8b8" stroke-width="1"/>
+   </pattern>
+   <pattern id="denseWoodHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(25)">
+     <line x1="0" y1="0" x2="0" y2="6" stroke="#a8a8a8" stroke-width="1"/>
+   </pattern>
+   <pattern id="concreteHatch" width="10" height="10" patternUnits="userSpaceOnUse">
+     <circle cx="2" cy="3" r="0.8" fill="#aaa"/>
+     <circle cx="7" cy="7" r="0.7" fill="#aaa"/>
+   </pattern>
+ </defs>`;
+}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+function renderResultDetails(d){
+ var details=document.getElementById("resultDetails");
+ if(!details) return;
+ var rows=[];
+ if(d.power===1){
+   rows.push(["Decimal feet", d.value.toFixed(4)+" ft"]);
+   rows.push(["Decimal inches", (d.value*12).toFixed(2)+' in']);
+   rows.push(["Precision", 'Nearest 1/'+precision.value+'"']);
+ }else if(d.power===2){
+   rows.push(["Square feet", d.value.toFixed(2)+" SF"]);
+   rows.push(["Square inches", (d.value*144).toFixed(0)+" in²"]);
+ }else if(d.power===3){
+   rows.push(["Cubic feet", d.value.toFixed(2)+" CF"]);
+   rows.push(["Cubic yards", (d.value/27).toFixed(3)+" CY"]);
+ }else{
+   rows.push(["Unitless value", String(Number(d.value.toFixed(6)))]);
+ }
+ details.innerHTML=rows.map(function(r){
+   return '<div class="detail-row"><span class="detail-label">'+esc(r[0])+'</span><span class="detail-value">'+esc(r[1])+'</span></div>';
+ }).join("");
+}
+
+
+
+
+function leaderLabel(x1,y1,x2,y2,label,anchor){
+ anchor=anchor||"start";
+ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#8a8a8f" stroke-width=".9"/>'+
+ '<circle cx="'+x1+'" cy="'+y1+'" r="1.8" fill="#8a8a8f"/>'+
+ '<text x="'+x2+'" y="'+(y2-4)+'" text-anchor="'+anchor+'" font-size="11" fill="#6f6f73">'+esc(label)+'</text>';
+}
+function noteText(x,y,text,anchor){
+ return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anchor||"start")+'" font-size="10.5" fill="#8d8d92">'+esc(text)+'</text>';
+}
+
+function dimArrowH(x1,x2,y,label){
+ return '<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="#6f6f73" stroke-width="1"/>'+
+ '<polygon points="'+x1+','+y+' '+(x1+7)+','+(y-4)+' '+(x1+7)+','+(y+4)+'" fill="#6f6f73"/>'+
+ '<polygon points="'+x2+','+y+' '+(x2-7)+','+(y-4)+' '+(x2-7)+','+(y+4)+'" fill="#6f6f73"/>'+
+ '<text x="'+((x1+x2)/2)+'" y="'+(y-10)+'" text-anchor="middle" font-size="17" fill="#707075">'+esc(label)+'</text>';
+}
+function dimArrowV(x,y1,y2,label){
+ return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="#6f6f73" stroke-width="1"/>'+
+ '<polygon points="'+x+','+y1+' '+(x-4)+','+(y1+7)+' '+(x+4)+','+(y1+7)+'" fill="#6f6f73"/>'+
+ '<polygon points="'+x+','+y2+' '+(x-4)+','+(y2-7)+' '+(x+4)+','+(y2-7)+'" fill="#6f6f73"/>'+
+ '<text x="'+(x+18)+'" y="'+((y1+y2)/2+5)+'" font-size="17" fill="#707075">'+esc(label)+'</text>';
+}
+function constructionTitle(title,subtitle){
+ return '<text x="350" y="31" text-anchor="middle" font-size="14" font-weight="700" fill="#777">'+esc(title)+'</text>';
+}
+
+function drawDefaultWall(){
+ let x=140,yTop=76,yBot=226,w=390,plateH=8,studW=7;
+ let h=svgDefs()+constructionTitle("WALL FRAMING","Width × height");
+ h+=dimArrowH(x,x+w,54,"8′ - 0″");
+ h+=dimArrowV(x+w+30,yTop,yBot,"9′ - 0″");
+ h+='<rect x="'+x+'" y="'+yTop+'" width="'+w+'" height="'+plateH+'" fill="url(#woodHatch)" stroke="#6f6f73" stroke-width="1"/>';
+ h+='<rect x="'+x+'" y="'+(yBot-plateH)+'" width="'+w+'" height="'+plateH+'" fill="url(#woodHatch)" stroke="#6f6f73" stroke-width="1"/>';
+ for(let i=0;i<8;i++){
+   let sx=x+(w-studW)*(i/7);
+   h+='<rect x="'+sx+'" y="'+(yTop+plateH)+'" width="'+studW+'" height="'+(yBot-yTop-2*plateH)+'" fill="url(#woodHatch)" stroke="#808085" stroke-width=".8"/>';
+ }
+ viz.innerHTML=h;
+}
+
+function drawLinear(d){
+ let vals=d.parts,x=55,yTop=80,yBot=195,maxW=590;
+ let mags=vals.map(v=>Math.max(.01,Math.abs(v.value))),sum=mags.reduce((a,b)=>a+b,0),cursor=x;
+ let h=svgDefs();
+
+ const plateH=10;
+ const studW=10;
+ const studTop=yTop+plateH/2;
+ const studBottom=yBot-plateH/2;
+ const studH=studBottom-studTop;
+
+ // Continuous top and bottom plates
+ h+=`<rect x="${x}" y="${yTop-plateH/2}" width="${maxW}" height="${plateH}" fill="url(#denseWoodHatch)" stroke="#333" stroke-width="1.3"/>`;
+ h+=`<rect x="${x}" y="${yBot-plateH/2}" width="${maxW}" height="${plateH}" fill="url(#denseWoodHatch)" stroke="#333" stroke-width="1.3"/>`;
+
+ vals.forEach((v,i)=>{
+   let w=Math.max(55,mags[i]/sum*maxW),x2=Math.min(x+maxW,cursor+w);
+
+   // Left end stud: squarely aligned with plate edges
+   h+=`<rect x="${cursor}" y="${studTop}" width="${studW}" height="${studH}" fill="url(#woodHatch)" stroke="#444" stroke-width="1.1"/>`;
+
+   // Interior studs
+   let studSpacing=42;
+   for(let sx=cursor+studSpacing;sx<x2-studW;sx+=studSpacing){
+     h+=`<rect x="${sx}" y="${studTop}" width="${studW}" height="${studH}" fill="url(#woodHatch)" stroke="#666" stroke-width="0.9"/>`;
+   }
+
+   // Right end stud: squarely aligned inside segment boundary
+   h+=`<rect x="${x2-studW}" y="${studTop}" width="${studW}" height="${studH}" fill="url(#woodHatch)" stroke="#444" stroke-width="1.1"/>`;
+
+   // Very light panel field
+   h+=`<rect x="${cursor+studW}" y="${studTop}" width="${Math.max(0,x2-cursor-2*studW)}" height="${studH}" fill="url(#woodHatch)" opacity="0.08"/>`;
+
+   // Dimension line
+   let dy=45;
+   h+=`<line x1="${cursor}" y1="${dy}" x2="${x2}" y2="${dy}" stroke="#222" stroke-width="1.5"/>`;
+   h+=`<line x1="${cursor}" y1="${dy-8}" x2="${cursor}" y2="${dy+8}" stroke="#222" stroke-width="1.5"/>`;
+   h+=`<line x1="${x2}" y1="${dy-8}" x2="${x2}" y2="${dy+8}" stroke="#222" stroke-width="1.5"/>`;
+   h+=`<text x="${(cursor+x2)/2}" y="${dy-13}" text-anchor="middle" class="segment-label">${esc(v.power?fmtLength(v.value):v.value)}</text>`;
+
+   if(i<d.ops.length){
+     h+=`<text x="${x2}" y="${yBot+35}" text-anchor="middle" font-size="22" font-weight="700">${esc(d.ops[i])}</text>`;
+   }
+   cursor=x2;
+ });
+
+ h+=`<text x="${x+12}" y="${yBot+22}" class="segment-label">Wood stud framing</text>`;
+ h+=`<text x="350" y="270" text-anchor="middle" class="total-label">Result: ${esc(fmtLength(d.value))}</text>`;
+ viz.innerHTML=h;
+}
+
+function drawArea(d){
+ let dims=d.parts.filter(p=>p.power===1); if(dims.length<2){drawLinear(d);return}
+ let a=Math.abs(dims[0].value),b=Math.abs(dims[1].value),scale=Math.min(420/a,170/b),w=a*scale,h=b*scale,x=350-w/2,y=135-h/2;
+ viz.innerHTML=svgDefs()+
+   `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#woodHatch)" opacity="0.22" stroke="#222" stroke-width="2"/>`+
+   `<line x1="${x}" y1="${y+h*.33}" x2="${x+w}" y2="${y+h*.33}" stroke="#aaa" stroke-width="0.8"/>`+
+   `<line x1="${x}" y1="${y+h*.66}" x2="${x+w}" y2="${y+h*.66}" stroke="#aaa" stroke-width="0.8"/>`+
+   `<text x="350" y="${y-16}" text-anchor="middle" class="segment-label">${esc(fmtLength(a))}</text>`+
+   `<text x="${x-26}" y="135" text-anchor="middle" class="segment-label" transform="rotate(-90 ${x-26} 135)">${esc(fmtLength(b))}</text>`+
+   `<text x="350" y="250" text-anchor="middle" class="total-label">${d.value.toFixed(2)} SF</text>`;
+}
+
+function drawVolume(d){
+ let dims=d.parts.filter(p=>p.power===1); if(dims.length<3){drawArea(d);return}
+ let x=180,y=110,w=285,h=120,dx=65,dy=40;
+ viz.innerHTML=svgDefs()+
+   `<polygon points="${x},${y} ${x+w},${y} ${x+w+dx},${y-dy} ${x+dx},${y-dy}" fill="url(#woodHatch)" opacity="0.14" stroke="#222" stroke-width="1.8"/>`+
+   `<polygon points="${x+w},${y} ${x+w+dx},${y-dy} ${x+w+dx},${y+h-dy} ${x+w},${y+h}" fill="url(#denseWoodHatch)" opacity="0.12" stroke="#222" stroke-width="1.8"/>`+
+   `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#woodHatch)" opacity="0.18" stroke="#222" stroke-width="1.8"/>`+
+   `<line x1="${x}" y1="${y}" x2="${x+dx}" y2="${y-dy}" stroke="#222" stroke-width="1.8"/>`+
+   `<line x1="${x}" y1="${y+h}" x2="${x+dx}" y2="${y+h-dy}" stroke="#222" stroke-width="1.8"/>`+
+   `<text x="350" y="270" text-anchor="middle" class="total-label">${d.value.toFixed(2)} CF</text>`;
+}
+
+
+function drawMaterialVisual(mode,L,W,thirdRaw,allowance,openingConfig){
+  if(activeMode!=="waste") return;
+
+  const validL=Number.isFinite(L)&&L>0;
+  const validW=Number.isFinite(W)&&W>0;
+  const l=validL?L:(mode==="concrete"?20:12);
+  const w=validW?W:(mode==="drywall"?8:10);
+  const lengthLabel=validL?fmtLength(l):"Length";
+  const widthLabel=validW?fmtLength(w):(mode==="drywall"?"Height":"Width");
+  const opening=openingConfig||{type:"",area:0};
+  let s=svgDefs();
+
+  function drawOpeningSymbol(x,y,ow,oh,type){
+    if(type==="door"){
+      s+=`<rect x="${x}" y="${y}" width="${ow}" height="${oh}" fill="#f5f5f6" stroke="#68686d" stroke-width="1.25"/>`;
+      s+=`<circle cx="${x+ow*.82}" cy="${y+oh*.52}" r="1.2" fill="#68686d"/>`;
+      s+=`<text x="${x+ow/2}" y="${y-7}" text-anchor="middle" font-size="10.5" fill="#727277">Door</text>`;
+    }else if(type==="window"){
+      s+=`<rect x="${x}" y="${y}" width="${ow}" height="${oh}" fill="#f5f5f6" stroke="#68686d" stroke-width="1.25"/>`;
+      s+=`<line x1="${x+ow/2}" y1="${y}" x2="${x+ow/2}" y2="${y+oh}" stroke="#9a9a9f" stroke-width=".9"/>`;
+      s+=`<line x1="${x}" y1="${y+oh/2}" x2="${x+ow}" y2="${y+oh/2}" stroke="#9a9a9f" stroke-width=".9"/>`;
+      s+=`<text x="${x+ow/2}" y="${y-7}" text-anchor="middle" font-size="10.5" fill="#727277">Window</text>`;
+    }else if(type==="arch"){
+      const curveH=Math.max(18,Math.min(45,oh*.34));
+      const springY=y+curveH;
+      const totalH=oh;
+      const path=`M ${x} ${y+totalH} L ${x} ${springY} Q ${x+ow/2} ${y-curveH*.55} ${x+ow} ${springY} L ${x+ow} ${y+totalH} Z`;
+      s+=`<path d="${path}" fill="#f5f5f6" stroke="#68686d" stroke-width="1.25"/>`;
+      s+=`<text x="${x+ow/2}" y="${y-7}" text-anchor="middle" font-size="10.5" fill="#727277">Arch</text>`;
+    }
+  }
+
+  if(mode==="drywall"){
+    s+=constructionTitle("DRYWALL","Wall area → sheets");
+    const x=115,y=72,drawW=445,drawH=148;
+    s+=dimArrowH(x,x+drawW,50,lengthLabel);
+    s+=dimArrowV(x+drawW+25,y,y+drawH,widthLabel);
+
+    s+=`<rect x="${x}" y="${y}" width="${drawW}" height="${drawH}" fill="#fbfbfb" stroke="#707075" stroke-width="1.4"/>`;
+
+    const cols=Math.max(1,Math.min(6,Math.ceil(l/4)));
+    for(let i=1;i<cols;i++){
+      const xx=x+drawW*(i/cols);
+      s+=`<line x1="${xx}" y1="${y}" x2="${xx}" y2="${y+drawH}" stroke="#b7b7bb" stroke-width="1" stroke-dasharray="4 4"/>`;
+    }
+    if(w>4){
+      const rows=Math.max(1,Math.min(3,Math.ceil(w/4)));
+      for(let i=1;i<rows;i++){
+        const yy=y+drawH*(i/rows);
+        s+=`<line x1="${x}" y1="${yy}" x2="${x+drawW}" y2="${yy}" stroke="#c4c4c8" stroke-width=".9" stroke-dasharray="4 4"/>`;
+      }
+    }
+
+    if(opening.area>0){
+      if(opening.type==="door"){
+        const ow=Math.min(84,drawW*.20),oh=Math.min(100,drawH*.68);
+        drawOpeningSymbol(x+drawW*.55-ow/2,y+drawH-oh,ow,oh,"door");
+      }else if(opening.type==="window"){
+        const ow=Math.min(105,drawW*.24),oh=Math.min(58,drawH*.38);
+        drawOpeningSymbol(x+drawW*.55-ow/2,y+drawH*.33,ow,oh,"window");
+      }else if(opening.type==="arch"){
+        const ow=Math.min(100,drawW*.24),oh=Math.min(104,drawH*.70);
+        drawOpeningSymbol(x+drawW*.55-ow/2,y+drawH-oh,ow,oh,"arch");
+      }
+    }
+
+    s+=`<text x="${x+10}" y="${y+18}" font-size="10.5" fill="#777">4′ × 8′ sheet layout</text>`;
+    s+=`<text x="350" y="263" text-anchor="middle" font-size="11" fill="#888">Area → subtract openings → add waste → whole sheets</text>`;
+    viz.innerHTML=s;
+    return;
+  }
+
+  if(mode==="concrete"){
+    s+=constructionTitle("CONCRETE","Length × width × thickness");
+    let thickness=parseToken(String(thirdRaw||""));
+    const t=(thickness&&thickness.power===1&&thickness.value>0)?thickness.value:(4/12);
+    const tValid=!!(thickness&&thickness.power===1&&thickness.value>0);
+    const thicknessLabel=tValid?fmtLength(t):"Thickness";
+
+    // Clean isometric slab. Thickness is intentionally exaggerated for legibility.
+    const x=145, y=112, frontW=350;
+    const depthX=88, depthY=-48;
+    const slabT=Math.max(24,Math.min(58,20+t*70));
+
+    const A=[x,y], B=[x+frontW,y], C=[x+frontW+depthX,y+depthY], D=[x+depthX,y+depthY];
+    const A2=[A[0],A[1]+slabT], B2=[B[0],B[1]+slabT], C2=[C[0],C[1]+slabT], D2=[D[0],D[1]+slabT];
+
+    // Top
+    s+=`<polygon points="${A.join(",")} ${B.join(",")} ${C.join(",")} ${D.join(",")}" fill="#fafafa" stroke="#606065" stroke-width="1.4"/>`;
+    // Front face
+    s+=`<polygon points="${A.join(",")} ${B.join(",")} ${B2.join(",")} ${A2.join(",")}" fill="url(#concreteHatch)" stroke="#68686d" stroke-width="1.3"/>`;
+    // Side face
+    s+=`<polygon points="${B.join(",")} ${C.join(",")} ${C2.join(",")} ${B2.join(",")}" fill="url(#concreteHatch)" opacity=".72" stroke="#68686d" stroke-width="1.3"/>`;
+
+    // Length dimension
+    s+=dimArrowH(A2[0],B2[0],A2[1]+30,lengthLabel);
+
+    // Width dimension, schematic diagonal leader.
+    s+=`<line x1="${D[0]}" y1="${D[1]-14}" x2="${C[0]}" y2="${C[1]-14}" stroke="#6f6f73" stroke-width="1"/>`;
+    s+=`<circle cx="${D[0]}" cy="${D[1]-14}" r="2" fill="#6f6f73"/><circle cx="${C[0]}" cy="${C[1]-14}" r="2" fill="#6f6f73"/>`;
+    s+=`<text x="${(D[0]+C[0])/2}" y="${(D[1]+C[1])/2-24}" text-anchor="middle" font-size="14" fill="#707075">${esc(widthLabel)}</text>`;
+
+    // Thickness dimension
+    s+=dimArrowV(C[0]+25,C[1],C2[1],thicknessLabel);
+
+    s+=`<text x="350" y="263" text-anchor="middle" font-size="11" fill="#888">Area + thickness turns the slab into volume → cubic yards</text>`;
+    viz.innerHTML=s;
+    return;
+  }
+
+  // Area Material
+  s+=constructionTitle("AREA MATERIAL","Measure the surface being covered");
+  const ratio=Math.max(.55,Math.min(1.9,l/w));
+  let drawW=ratio>=1?430:310;
+  let drawH=ratio>=1?Math.max(105,Math.min(160,drawW/ratio)):170;
+  if(drawH>164){drawH=164;drawW=Math.min(430,drawH*ratio)}
+  const x=350-drawW/2,y=78;
+
+  s+=dimArrowH(x,x+drawW,55,lengthLabel);
+  s+=dimArrowV(x+drawW+27,y,y+drawH,widthLabel);
+  s+=`<rect x="${x}" y="${y}" width="${drawW}" height="${drawH}" fill="url(#woodHatch)" opacity=".18" stroke="#707075" stroke-width="1.4"/>`;
+
+  if(opening.area>0){
+    if(opening.type==="door"){
+      const ow=Math.min(74,drawW*.20),oh=Math.min(96,drawH*.62);
+      drawOpeningSymbol(x+drawW*.58-ow/2,y+drawH-oh,ow,oh,"door");
+    }else if(opening.type==="window"){
+      const ow=Math.min(96,drawW*.26),oh=Math.min(58,drawH*.38);
+      drawOpeningSymbol(x+drawW*.58-ow/2,y+drawH*.35,ow,oh,"window");
+    }else if(opening.type==="arch"){
+      const ow=Math.min(92,drawW*.24),oh=Math.min(98,drawH*.62);
+      drawOpeningSymbol(x+drawW*.58-ow/2,y+drawH-oh,ow,oh,"arch");
+    }
+  }
+
+  const area=l*w;
+  s+=`<text x="350" y="${y+drawH/2+5}" text-anchor="middle" font-size="17" font-weight="700" fill="#555">${validL&&validW?area.toFixed(1)+" SF":"Surface Area"}</text>`;
+  s+=`<text x="350" y="262" text-anchor="middle" font-size="11" fill="#888">Length × Width → subtract openings → add waste</text>`;
+  viz.innerHTML=s;
+}
+window.__buildcalcDrawMaterialVisual=drawMaterialVisual;
+
+function renderHistory(){
+ const el=document.getElementById("history");
+ if(!el) return;
+ if(!historyItems.length){
+   el.innerHTML='<div class="empty-state">No calculations yet.</div>';
+   return;
+ }
+ el.innerHTML=historyItems.map((h,i)=>
+   '<button type="button" class="history-item" data-i="'+i+'">'+
+   '<span class="history-exp">'+esc(h.exp)+'</span>'+
+   '<span class="history-res">'+esc(h.res)+'</span></button>'
+ ).join("");
+ el.querySelectorAll(".history-item").forEach(function(n){
+   n.addEventListener("click",function(){
+     input.value=historyItems[+n.dataset.i].exp;
+     closeSheet();
+     activateModeButton(document.querySelector('.tool-btn[data-tool="calculator"]'));
+     update(false);
+     input.focus();
+   });
+ });
+}
+function addHistory(exp,res){
+ let key=exp+"="+res;if(key===lastHistoryKey)return;lastHistoryKey=key;
+ historyItems.unshift({exp,res});historyItems=historyItems.slice(0,8);renderHistory();
+}
+function update(save=true){
+ let d=evaluate(input.value);
+ if(!d){
+ answer.textContent="—";
+ meta.textContent="";
+ error.textContent=input.value.trim()?"Check the expression.":"Enter a construction calculation.";
+ if(activeMode==="calculator"){ drawDefaultWall(); }
+ return
+}
+ let f=fmtResult(d);answer.textContent=f.text;meta.textContent=f.meta;error.textContent="";
+ if(activeMode==="calculator"){if(d.power===1)drawLinear(d);else if(d.power===2)drawArea(d);else if(d.power===3)drawVolume(d);else viz.innerHTML=`<text x="350" y="150" text-anchor="middle" class="total-label">${esc(f.text)}</text>`;}
+ if(save && /[+\-×÷*/]/.test(input.value) && input.value.trim().length>2) addHistory(input.value.trim(),f.text);
+}
+input.addEventListener("input",()=>update(true));precision.addEventListener("change",()=>update(false));
+
+
+
+function activateModeButton(b){
+ var id=b.getAttribute("data-tool");
+ if(!id) return;
+ activeMode=id;
+
+ document.querySelectorAll(".tool-panel").forEach(function(p){p.classList.remove("active");});
+ document.querySelectorAll(".tool-btn").forEach(function(x){x.classList.remove("active");});
+ b.classList.add("active");
+
+ var label=document.getElementById("modeLabel");
+ if(label){
+   label.textContent=
+     id==="calculator"?"Calculator":
+     id==="riseRun"?"Rise / Run":
+     id==="stairs"?"Stairs":
+     id==="roof"?"Roof / Rafter":
+     id==="spacing"?"Spacing":
+     id==="waste"?"Material":"Scale";
+ }
+
+ var panel=document.getElementById(id);
+ if(id!=="calculator" && panel){
+   panel.classList.add("active");
+ }
+
+ if(id==="calculator") update(false);
+ else if(id==="riseRun") updateRiseRun();
+ else if(id==="stairs") updateStairs();
+ else if(id==="roof") updateRoof();
+ else if(id==="spacing") updateSpacing();
+ else if(id==="waste"){
+   // Material controller will immediately redraw this using the selected material mode.
+   if(typeof window.__buildcalcDrawMaterialVisual==="function"){
+     const savedMode=localStorage.getItem("bc-material-mode")||"area";
+     window.__buildcalcDrawMaterialVisual(savedMode==="general"?"area":savedMode,NaN,NaN,"",0,{type:"",area:0});
+   }
+ }
+ else if(id==="scale") updateScale();
+}
+
+document.querySelectorAll(".tool-btn").forEach(function(b){
+ var touchHandled=false;
+
+ b.addEventListener("touchend",function(e){
+   touchHandled=true;
+   e.preventDefault();
+   activateModeButton(b);
+   setTimeout(function(){touchHandled=false;},350);
+ },{passive:false});
+
+ b.addEventListener("click",function(e){
+   if(touchHandled) return;
+   e.preventDefault();
+   activateModeButton(b);
+ });
+});
+
+
+function updateRiseRun(){
+ let rise=parseToken(document.getElementById("riseInput").value);
+ let run=parseToken(document.getElementById("runInput").value);
+ let out=document.getElementById("riseRunOut");
+ if(!rise||!run||rise.power!==1||run.power!==1||rise.value<=0||run.value<=0){
+   out.textContent="Check the rise and run dimensions.";
+   if(activeMode==="riseRun") viz.innerHTML="";
+   return;
+ }
+
+ let slope=rise.value/run.value;
+ let angle=Math.atan(slope)*180/Math.PI;
+ let diagonal=Math.sqrt(rise.value*rise.value+run.value*run.value);
+ let pitch12=slope*12;
+
+ out.innerHTML="<strong>Pitch "+pitch12.toFixed(2)+":12</strong><br>Angle "+angle.toFixed(2)+"°<br>Diagonal "+fmtLength(diagonal);
+ if(activeMode!=="riseRun") return;
+
+ let maxW=470,maxH=150;
+ let scale=Math.min(maxW/run.value,maxH/rise.value);
+ let w=run.value*scale,h=rise.value*scale;
+ let x=95,y=210,x2=x+w,y2=y-h;
+
+ viz.innerHTML=
+   svgDefs()+
+   `<polygon points="${x},${y} ${x2},${y} ${x2},${y2}" fill="url(#woodHatch)" opacity="0.22"/>`+
+   `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y}" stroke="#222" stroke-width="2"/>`+
+   `<line x1="${x2}" y1="${y}" x2="${x2}" y2="${y2}" stroke="#222" stroke-width="2"/>`+
+   `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="#222" stroke-width="2"/>`+
+   `<line x1="${x}" y1="${y+20}" x2="${x2}" y2="${y+20}" stroke="#222" stroke-width="1.5"/>`+
+   `<line x1="${x}" y1="${y+12}" x2="${x}" y2="${y+28}" stroke="#222" stroke-width="1.5"/>`+
+   `<line x1="${x2}" y1="${y+12}" x2="${x2}" y2="${y+28}" stroke="#222" stroke-width="1.5"/>`+
+   `<text x="${(x+x2)/2}" y="${y+47}" text-anchor="middle" class="segment-label">Run ${esc(fmtLength(run.value))}</text>`+
+   `<line x1="${x2+20}" y1="${y}" x2="${x2+20}" y2="${y2}" stroke="#222" stroke-width="1.5"/>`+
+   `<line x1="${x2+12}" y1="${y}" x2="${x2+28}" y2="${y}" stroke="#222" stroke-width="1.5"/>`+
+   `<line x1="${x2+12}" y1="${y2}" x2="${x2+28}" y2="${y2}" stroke="#222" stroke-width="1.5"/>`+
+   `<text x="${x2+43}" y="${(y+y2)/2}" class="segment-label" transform="rotate(-90 ${x2+43} ${(y+y2)/2})">Rise ${esc(fmtLength(rise.value))}</text>`+
+   `<text x="350" y="35" text-anchor="middle" class="total-label">${pitch12.toFixed(2)} : 12 • ${angle.toFixed(2)}°</text>`;
+}
+window.__buildcalcLegacyRiseRun = updateRiseRun;
+
+function updateStairs(){
+ let totalRise=parseToken(document.getElementById("stairTotalRise").value);
+ let targetRiser=parseToken(document.getElementById("stairTargetRiser").value);
+ let tread=parseToken(document.getElementById("stairTread").value);
+ let out=document.getElementById("stairsOut");
+
+ if(!totalRise||!targetRiser||!tread||totalRise.power!==1||targetRiser.power!==1||tread.power!==1||
+    totalRise.value<=0||targetRiser.value<=0||tread.value<=0){
+   out.textContent="Check the stair dimensions.";
+   if(activeMode==="stairs") viz.innerHTML="";
+   return;
+ }
+
+ let risers=Math.max(1,Math.round(totalRise.value/targetRiser.value));
+ let actualRiser=totalRise.value/risers;
+ let treads=Math.max(1,risers-1);
+ let totalRun=treads*tread.value;
+ let angle=Math.atan(actualRiser/tread.value)*180/Math.PI;
+ let stringer=Math.sqrt(totalRise.value*totalRise.value+totalRun*totalRun);
+
+ out.innerHTML="<strong>"+risers+" risers • "+treads+" treads</strong><br>Actual riser "+fmtLength(actualRiser)+"<br>Total run "+fmtLength(totalRun)+"<br>Angle "+angle.toFixed(1)+"°";
+
+ if(activeMode!=="stairs") return;
+
+ let x=75,baseY=215,maxW=520,maxH=155;
+ let scale=Math.min(maxW/totalRun,maxH/totalRise.value);
+ let stepW=tread.value*scale,stepH=actualRiser*scale;
+ let drawTreads=Math.min(treads,14);
+ let displayScale = drawTreads < treads ? maxW/(treads*tread.value) : scale;
+ stepW=tread.value*displayScale;
+ stepH=actualRiser*displayScale;
+
+ let path=`M ${x} ${baseY}`;
+ for(let i=0;i<treads;i++){
+   let nx=x+(i+1)*stepW;
+   let ny=baseY-(i+1)*stepH;
+   path+=` H ${nx} V ${ny}`;
+ }
+ let endX=x+treads*stepW,endY=baseY-treads*stepH;
+
+ let h=svgDefs();
+ h+=`<path d="${path} V ${baseY} H ${x} Z" fill="url(#woodHatch)" opacity="0.28" stroke="none"/>`;
+ h+=`<path d="${path}" fill="none" stroke="#222" stroke-width="2"/>`;
+ h+=`<line x1="${x}" y1="${baseY}" x2="${endX+35}" y2="${baseY}" stroke="#999" stroke-width="1"/>`;
+ h+=`<line x1="${endX}" y1="${endY}" x2="${endX+35}" y2="${endY}" stroke="#999" stroke-width="1"/>`;
+ h+=`<text x="350" y="30" text-anchor="middle" class="total-label">${risers} risers • ${treads} treads • ${angle.toFixed(1)}°</text>`;
+
+ // total run dimension
+ h+=`<line x1="${x}" y1="248" x2="${endX}" y2="248" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${x}" y1="240" x2="${x}" y2="256" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${endX}" y1="240" x2="${endX}" y2="256" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<text x="${(x+endX)/2}" y="276" text-anchor="middle" class="segment-label">Run ${esc(fmtLength(totalRun))}</text>`;
+
+ // total rise dimension
+ let dx=endX+22;
+ h+=`<line x1="${dx}" y1="${baseY}" x2="${dx}" y2="${endY}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${dx-7}" y1="${baseY}" x2="${dx+7}" y2="${baseY}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${dx-7}" y1="${endY}" x2="${dx+7}" y2="${endY}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<text x="${dx+20}" y="${(baseY+endY)/2}" class="segment-label" transform="rotate(-90 ${dx+20} ${(baseY+endY)/2})">Rise ${esc(fmtLength(totalRise.value))}</text>`;
+
+ viz.innerHTML=h;
+}
+
+
+function updateRoof(){
+ let span=parseToken(document.getElementById("roofSpan").value);
+ let overhang=parseToken(document.getElementById("roofOverhang").value);
+ let pitch=Number(document.getElementById("roofPitch").value);
+ let out=document.getElementById("roofOut");
+
+ if(!span||!overhang||span.power!==1||overhang.power!==1||span.value<=0||overhang.value<0||!Number.isFinite(pitch)){
+   out.textContent="Check the roof dimensions.";
+   if(activeMode==="roof") viz.innerHTML="";
+   return;
+ }
+
+ let halfRun=span.value/2;
+ let slope=pitch/12;
+ let rise=halfRun*slope;
+ let commonRafter=Math.sqrt(halfRun*halfRun+rise*rise);
+
+ let fullRunWithOverhang=halfRun+overhang.value;
+ let fullRiseWithOverhang=fullRunWithOverhang*slope;
+ let rafterWithOverhang=Math.sqrt(fullRunWithOverhang*fullRunWithOverhang+fullRiseWithOverhang*fullRiseWithOverhang);
+ let angle=Math.atan(slope)*180/Math.PI;
+
+ out.innerHTML="<strong>Common rafter "+fmtLength(commonRafter)+"</strong><br>Half run "+fmtLength(halfRun)+"<br>Rise "+fmtLength(rise)+"<br>With overhang "+fmtLength(rafterWithOverhang)+"<br>Angle "+angle.toFixed(1)+"°";
+
+ if(activeMode!=="roof") return;
+
+ let xL=85,xR=615,baseY=205,center=(xL+xR)/2;
+ let roofHalfW=(xR-xL)/2;
+ let roofH=Math.min(145,roofHalfW*slope);
+ let ridgeY=baseY-roofH;
+
+ let wallInset=55;
+ let wallL=xL+wallInset, wallR=xR-wallInset;
+ let eaveL=xL, eaveR=xR;
+
+ let h="";
+ // framed walls under the roof
+ let wallTop=baseY-70;
+ let wallBottom=baseY;
+ h+=svgDefs();
+
+ // light roof sheathing / assembly fill
+ h+=`<polygon points="${eaveL},${baseY} ${center},${ridgeY} ${eaveR},${baseY} ${center},${ridgeY+8}" fill="url(#woodHatch)" opacity="0.35"/>`;
+
+ // top and bottom plates
+ h+=`<rect x="${wallL}" y="${wallTop-4}" width="${wallR-wallL}" height="6" fill="url(#denseWoodHatch)" stroke="#555" stroke-width="1.2"/>`;
+ h+=`<rect x="${wallL}" y="${wallBottom-3}" width="${wallR-wallL}" height="6" fill="url(#woodHatch)" stroke="#777" stroke-width="1.1"/>`;
+
+ // exterior wall studs
+ let studCount=9;
+ for(let i=0;i<studCount;i++){
+   let sx=wallL+(wallR-wallL)*(i/(studCount-1));
+   h+=`<rect x="${sx-2.5}" y="${wallTop+2}" width="5" height="${wallBottom-wallTop-5}" fill="url(#woodHatch)" stroke="#666" stroke-width="0.9"/>`;
+ }
+
+ // ceiling joist / rafter tie
+ h+=`<rect x="${wallL}" y="${wallTop-9}" width="${wallR-wallL}" height="4" fill="url(#woodHatch)" stroke="#777" stroke-width="0.9"/>`;
+
+ // construction labels
+ h+=`<text x="${wallL+12}" y="${wallBottom-16}" class="segment-label" font-size="12">Stud wall</text>`;
+ h+=`<text x="${(wallL+wallR)/2}" y="${wallBottom+18}" text-anchor="middle" class="segment-label" font-size="12">Ceiling joist / rafter tie</text>`;
+
+ // rafters
+ h+=`<line x1="${eaveL}" y1="${baseY}" x2="${center}" y2="${ridgeY}" stroke="#222" stroke-width="5" opacity="0.18"/>`;
+ h+=`<line x1="${eaveL}" y1="${baseY}" x2="${center}" y2="${ridgeY}" stroke="#222" stroke-width="1.8"/>`;
+ h+=`<line x1="${center}" y1="${ridgeY}" x2="${eaveR}" y2="${baseY}" stroke="#222" stroke-width="5" opacity="0.18"/>`;
+ h+=`<line x1="${center}" y1="${ridgeY}" x2="${eaveR}" y2="${baseY}" stroke="#222" stroke-width="1.8"/>`;
+
+ // ridge
+ h+=`<line x1="${center}" y1="${ridgeY-10}" x2="${center}" y2="${ridgeY+18}" stroke="#222" stroke-width="2"/>`;
+ h+=`<text x="${center+18}" y="${ridgeY-16}" class="segment-label" font-size="12">Ridge</text>`;
+ h+=`<text x="${(eaveR+center)/2+42}" y="${(baseY+ridgeY)/2-28}" text-anchor="middle" class="segment-label" font-size="12">Rafter</text>`;
+
+ // run dimension
+ let dimY=242;
+ h+=`<line x1="${wallL}" y1="${dimY}" x2="${center}" y2="${dimY}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${wallL}" y1="${dimY-7}" x2="${wallL}" y2="${dimY+7}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${center}" y1="${dimY-7}" x2="${center}" y2="${dimY+7}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<text x="${(wallL+center)/2}" y="${dimY+22}" text-anchor="middle" class="segment-label">Run ${esc(fmtLength(halfRun))}</text>`;
+
+ // rise dimension
+ let dimX=center+28;
+ h+=`<line x1="${dimX}" y1="${baseY-70}" x2="${dimX}" y2="${ridgeY}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${dimX-7}" y1="${baseY-70}" x2="${dimX+7}" y2="${baseY-70}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<line x1="${dimX-7}" y1="${ridgeY}" x2="${dimX+7}" y2="${ridgeY}" stroke="#222" stroke-width="1.5"/>`;
+ h+=`<text x="${dimX+20}" y="${(baseY-70+ridgeY)/2}" class="segment-label" transform="rotate(-90 ${dimX+20} ${(baseY-70+ridgeY)/2})">Rise ${esc(fmtLength(rise))}</text>`;
+
+ // rafter annotation and header
+ h+=`<text x="350" y="30" text-anchor="middle" class="total-label">${pitch}:12 • ${angle.toFixed(1)}°</text>`;
+ h+=`<text x="${(eaveL+center)/2-35}" y="${(baseY+ridgeY)/2-32}" text-anchor="middle" class="segment-label">Rafter ${esc(fmtLength(commonRafter))}</text>`;
+
+ viz.innerHTML=h;
+}
+
+function updateSpacing(){
+ let L=parseToken(document.getElementById("spacingLength").value),S=parseToken(document.getElementById("spacingOC").value),o=document.getElementById("spacingOut");
+ if(!L||!S||L.power!==1||S.power!==1||S.value<=0){o.textContent="Check the dimensions.";if(activeMode==="spacing")viz.innerHTML="";return;}
+ let spaces=Math.ceil(L.value/S.value),marks=spaces+1,actual=L.value/spaces;
+ o.textContent=marks+" studs/marks • "+spaces+" spaces • actual "+fmtLength(actual)+" O.C.";
+ if(activeMode!=="spacing")return;
+
+ let x=125,yTop=82,yBot=230,w=420,plateH=7,studW=7,s=svgDefs()+constructionTitle("SPACING","Stud layout");
+ s+=dimArrowH(x,x+w,58,"Length "+fmtLength(L.value));
+ s+='<rect x="'+x+'" y="'+yTop+'" width="'+w+'" height="'+plateH+'" fill="url(#woodHatch)" stroke="#777" stroke-width="1"/>';
+ s+='<rect x="'+x+'" y="'+(yBot-plateH)+'" width="'+w+'" height="'+plateH+'" fill="url(#woodHatch)" stroke="#777" stroke-width="1"/>';
+ let count=Math.min(marks,15);
+ for(let i=0;i<count;i++){let sx=x+(w-studW)*(i/(count-1||1));s+='<rect x="'+sx+'" y="'+(yTop+plateH)+'" width="'+studW+'" height="'+(yBot-yTop-2*plateH)+'" fill="url(#woodHatch)" stroke="#858589" stroke-width=".8"/>';}
+ if(count>1){
+   let sx1=x+studW/2,sx2=x+(w-studW)/(count-1)+studW/2;
+   s+=dimArrowH(sx1,sx2,258,fmtLength(actual)+' O.C.');
+ }
+ viz.innerHTML=s;
+}
+function updateWaste(){
+ let b=Number(document.getElementById("wasteBase").value),p=Number(document.getElementById("wastePct").value),o=document.getElementById("wasteOut");
+ if(!Number.isFinite(b)||!Number.isFinite(p)||b<0||p<0){o.textContent="Check the values.";if(activeMode==="waste")viz.innerHTML="";return;}
+ let waste=b*(p/100),total=b+waste;o.textContent=total.toFixed(2)+" total • "+waste.toFixed(2)+" waste";
+ if(activeMode!=="waste")return;
+
+ let x=120,y=102,w=460,h=118,ratio=total>0?b/total:1,bw=w*ratio,ww=w-bw,s=svgDefs()+constructionTitle("WASTE","Base material + allowance");
+ s+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" fill="url(#woodHatch)" opacity=".6" stroke="#707074" stroke-width="1"/>';
+ s+='<rect x="'+(x+bw)+'" y="'+y+'" width="'+ww+'" height="'+h+'" fill="url(#woodHatch)" opacity=".18" stroke="#8b8b8f" stroke-width="1" stroke-dasharray="6 5"/>';
+ s+=dimArrowH(x,x+bw,82,"Base "+b.toFixed(0));
+ if(ww>28)s+=dimArrowH(x+bw,x+w,82,"Waste "+p.toFixed(0)+"%");
+ s+='<text x="'+(x+bw/2)+'" y="'+(y+h/2+5)+'" text-anchor="middle" font-size="15" fill="#555">Base</text>';
+ if(ww>28)s+='<text x="'+(x+bw+ww/2)+'" y="'+(y+h/2+5)+'" text-anchor="middle" font-size="13" fill="#777">Material</text>';
+ viz.innerHTML=s;
+}
+function updateScale(){
+ let d=Number(document.getElementById("scaleDrawing").value),r=Number(document.getElementById("scaleRatio").value),o=document.getElementById("scaleOut");
+ if(!Number.isFinite(d)||d<0){o.textContent="Check the drawing measurement.";if(activeMode==="scale")viz.innerHTML="";return;}
+ let realFt=(d*r)/12;o.textContent=fmtLength(realFt);
+ if(activeMode!=="scale")return;
+
+ let x=120,y=142,w=460,segments=8,seg=w/segments,labels=["0",'6″',"1′",'1′-6″',"2′"],s=svgDefs()+constructionTitle("SCALE","Drawing measurement → actual size");
+ let label=document.getElementById("scaleRatio").options[document.getElementById("scaleRatio").selectedIndex].text;
+ s+='<text x="350" y="98" text-anchor="middle" font-size="19" font-weight="700" fill="#444">'+esc(label)+'</text>';
+ for(let i=0;i<segments;i++)s+='<rect x="'+(x+i*seg)+'" y="'+y+'" width="'+seg+'" height="22" fill="'+(i%2===0?'#454549':'#fff')+'" stroke="#555" stroke-width=".7"/>';
+ for(let i=0;i<=4;i++){let px=x+(w/4)*i;s+='<line x1="'+px+'" y1="'+(y+22)+'" x2="'+px+'" y2="'+(y+33)+'" stroke="#555" stroke-width="1"/><text x="'+px+'" y="'+(y+52)+'" text-anchor="middle" font-size="12" fill="#666">'+labels[i]+'</text>';}
+ s+='<text x="350" y="263" text-anchor="middle" font-size="17" font-weight="700" fill="#444">= '+esc(fmtLength(realFt))+' actual</text>';
+ viz.innerHTML=s;
+}
+["riseInput","runInput"].forEach(id=>document.getElementById(id).addEventListener("input",updateRiseRun));
+["stairTotalRise","stairTargetRiser","stairTread"].forEach(id=>document.getElementById(id).addEventListener("input",updateStairs));
+["roofSpan","roofOverhang"].forEach(id=>document.getElementById(id).addEventListener("input",updateRoof));
+document.getElementById("roofPitch").addEventListener("change",updateRoof);
+["spacingLength","spacingOC"].forEach(id=>document.getElementById(id).addEventListener("input",updateSpacing));
+["wasteBase","wastePct"].forEach(id=>document.getElementById(id).addEventListener("input",updateWaste));
+["scaleDrawing","scaleRatio"].forEach(id=>document.getElementById(id).addEventListener("input",updateScale));
+document.getElementById("scaleRatio").addEventListener("change",updateScale);
+
+
+var activeBuildCalcInput=input;
+
+document.addEventListener("focusin",function(e){
+  var el=e.target;
+  if(el && (el.id==="expression" || (el.matches && el.matches("#toolFields input")))){
+    document.querySelectorAll("#toolFields input").forEach(function(x){x.classList.remove("buildcalc-keypad-target")});
+    activeBuildCalcInput=el;
+    if(el.matches && el.matches("#toolFields input")) el.classList.add("buildcalc-keypad-target");
+  }
+});
+
+function getBuildCalcTarget(){
+  if(document.body.classList.contains("special-tool-active")){
+    if(activeBuildCalcInput && activeBuildCalcInput.matches && activeBuildCalcInput.matches("#toolFields input")){
+      return activeBuildCalcInput;
+    }
+    var first=document.querySelector("#toolFields input");
+    if(first) return first;
+  }
+  return input;
+}
+
+function insertAtCursor(text){
+ var target=getBuildCalcTarget();
+ if(!target)return;
+ var start=(typeof target.selectionStart==="number")?target.selectionStart:target.value.length;
+ var end=(typeof target.selectionEnd==="number")?target.selectionEnd:target.value.length;
+ var before=target.value.slice(0,start);
+ var after=target.value.slice(end);
+ target.value=before+text+after;
+ var pos=start+text.length;
+ target.focus();
+ try{target.setSelectionRange(pos,pos);}catch(e){}
+ target.dispatchEvent(new Event("input",{bubbles:true}));
+}
+
+function backspaceAtCursor(){
+ var target=getBuildCalcTarget();
+ if(!target)return;
+ var start=(typeof target.selectionStart==="number")?target.selectionStart:target.value.length;
+ var end=(typeof target.selectionEnd==="number")?target.selectionEnd:target.value.length;
+ if(start!==end){
+   target.value=target.value.slice(0,start)+target.value.slice(end);
+   try{target.setSelectionRange(start,start);}catch(e){}
+ }else if(start>0){
+   target.value=target.value.slice(0,start-1)+target.value.slice(end);
+   try{target.setSelectionRange(start-1,start-1);}catch(e){}
+ }
+ target.focus();
+ target.dispatchEvent(new Event("input",{bubbles:true}));
+}
+
+function smartInsert(token){
+ var target=getBuildCalcTarget();
+ if(!target)return;
+
+ if(token==="⌫"){backspaceAtCursor();return;}
+ if(token==="C"){
+   target.value="";
+   target.focus();
+   target.dispatchEvent(new Event("input",{bubbles:true}));
+   return;
+ }
+ if(token==="="){
+   if(target===input){
+     update(true);
+   }else{
+     target.dispatchEvent(new Event("input",{bubbles:true}));
+   }
+   target.blur();
+   return;
+ }
+ var operators={"+":" + ","−":" − ","×":" × ","÷":" ÷ "};
+ insertAtCursor(operators[token]||token);
+}
+
+document.querySelectorAll("[data-key]").forEach(function(btn){
+ function handle(e){
+   e.preventDefault();
+   smartInsert(btn.getAttribute("data-key"));
+ }
+ if(window.PointerEvent) btn.addEventListener("pointerup",handle);
+ else btn.addEventListener("touchend",handle,{passive:false});
+});
+
+function syncQuickLabels(){
+ var p=document.getElementById("precisionQuick");
+ var s=document.getElementById("scaleQuick");
+ if(p) p.textContent='Round to: 1/'+precision.value+'"';
+ if(s){
+   var sel=document.getElementById("scaleRatio");
+   s.textContent='Scale: '+sel.options[sel.selectedIndex].text;
+ }
+}
+precision.addEventListener("change",syncQuickLabels);
+document.getElementById("scaleRatio").addEventListener("change",syncQuickLabels);
+
+function cyclePrecision(){
+ var values=["2","4","8","16","32"];
+ var i=values.indexOf(precision.value);
+ precision.value=values[(i+1)%values.length];
+ precision.dispatchEvent(new Event("change",{bubbles:true}));
+ update(false);
+}
+document.getElementById("precisionQuick").addEventListener("click",cyclePrecision);
+
+document.getElementById("scaleQuick").addEventListener("click",function(){
+ 
+});
+
+var sheet=document.getElementById("appSheet");
+var sheetTitle=document.getElementById("sheetTitle");
+var sheetBody=document.getElementById("sheetBody");
+
+function openSheet(title,content){
+ sheetTitle.textContent=title;
+ sheetBody.innerHTML=content;
+ sheet.classList.add("open");
+ document.body.classList.add("sheet-open");
+}
+function closeSheet(){
+ sheet.classList.remove("open");
+ document.body.classList.remove("sheet-open");
+}
+document.getElementById("sheetClose").addEventListener("click",closeSheet);
+document.getElementById("sheetBackdrop").addEventListener("click",closeSheet);
+
+document.getElementById("navCalc").addEventListener("click",function(){document.querySelectorAll('.nav-btn').forEach(function(n){n.classList.remove('active')});this.classList.add('active');
+ activateModeButton(document.querySelector('.tool-btn[data-tool="calculator"]'));
+ window.scrollTo({top:0,behavior:"smooth"});
+});
+document.getElementById("navHistory").addEventListener("click",function(){document.querySelectorAll('.nav-btn').forEach(function(n){n.classList.remove('active')});this.classList.add('active');
+ openSheet("History",'<div id="history" class="history-list"></div><button type="button" id="clearHistory" class="sheet-action">Clear history</button>');
+ renderHistory();
+ document.getElementById("clearHistory").addEventListener("click",function(){
+   historyItems=[];lastHistoryKey="";renderHistory();
+ });
+});
+document.getElementById("navMore").addEventListener("click",function(){document.querySelectorAll('.nav-btn').forEach(function(n){n.classList.remove('active')});this.classList.add('active');
+ openSheet("Calculator settings",
+   '<div class="settings-copy"><strong>Construction precision</strong><p>Tap the Round to control under the visual to cycle between 1/2", 1/4", 1/8", 1/16", and 1/32".</p>'+
+   '<strong>Live calculation</strong><p>Results and construction visuals update while you enter dimensions. The = key confirms the current calculation and saves it to History.</p>'+
+   '<strong>Input format</strong><p>Use feet, inches, fractions, decimals, and the + − × ÷ operators.</p></div>'
+ );
+});
+
+var navSaved=document.getElementById("navSaved");
+if(navSaved){
+ navSaved.addEventListener("click",function(){
+  document.querySelectorAll('.nav-btn').forEach(function(n){n.classList.remove('active')});
+  this.classList.add('active');
+  openSheet("Saved",'<div class="empty-state">Saved calculations will appear here.</div>');
+ });
+}
+syncQuickLabels();
+
+update(false);updateRiseRun();updateStairs();updateRoof();updateSpacing();updateWaste();updateScale();
+var appStatus=document.getElementById("appStatus"); if(appStatus){appStatus.textContent="Ready";}
+
+window.addEventListener("error",function(){
+ var er=document.getElementById("error");
+ if(er) er.textContent="Something went wrong in this tool. Reload this version and try again.";
+});
+
+
+document.getElementById("topMore").addEventListener("click",function(){ document.getElementById("navMore").click(); });
+document.getElementById("topSettings").addEventListener("click",function(){ document.getElementById("navMore").click(); });
+
+
+
+</script>
+
+<script>
+(function(){
+  const panel = document.getElementById('toolInputPanel');
+  const heading = document.getElementById('toolInputHeading');
+  const sub = document.getElementById('toolInputSub');
+  const fields = document.getElementById('toolFields');
+  if(!panel || !heading || !fields) return;
+
+  const configs = {
+    "rise/run": {
+      title:"Rise / Run",
+      sub:"Enter rise and run. The construction visual updates with your dimensions.",
+      fields:[
+        ["Rise","rise","e.g. 4′ - 0″"],
+        ["Run","run","e.g. 12′ - 0″"]
+      ]
+    },
+    "stairs": {
+      title:"Stairs",
+      sub:"Enter the overall stair dimensions to develop the stair geometry.",
+      fields:[
+        ["Total Rise","totalRise","e.g. 9′ - 0″"],
+        ["Desired Riser","riser","e.g. 7 1/2″"],
+        ["Tread Depth","tread","e.g. 10″"]
+      ]
+    },
+    "roof/rafter": {
+      title:"Roof / Rafter",
+      sub:"Enter the roof run and pitch to calculate and visualize the rafter.",
+      fields:[
+        ["Run","roofRun","e.g. 12′ - 0″"],
+        ["Pitch","pitch","e.g. 6 / 12"],
+        ["Overhang","overhang","e.g. 1′ - 0″"]
+      ]
+    },
+    "spacing": {
+      title:"Spacing",
+      sub:"Enter the total layout length and on-center spacing.",
+      fields:[
+        ["Total Length","layoutLength","e.g. 16′ - 0″"],
+        ["O.C. Spacing","oc","e.g. 16″"]
+      ]
+    },
+    "waste": {
+    title:"Material",
+    sub:"Choose Area Material, Drywall, or Concrete. BuildCalc starts with dimensions, then calculates the material quantity and estimated material cost.",
+    fields:[
+      ["Length","length","e.g. 12′ - 0″"],
+      ["Width / Height","width","e.g. 10′ - 0″"],
+      ["Openings to Subtract (SF)","openings","e.g. 0"],
+      ["Waste Allowance (%)","waste","e.g. 10"],
+      ["Unit Price ($ / SF)","unitPrice","e.g. 3.50"]
+    ]
+  }
+  };
+
+  function norm(s){
+    return (s||"").toLowerCase().replace(/\s+/g,"").replace("–","-");
+  }
+
+  function configFor(label){
+    const n=norm(label);
+    if(n.includes("rise/run") || (n.includes("rise")&&n.includes("run"))) return configs["rise/run"];
+    if(n.includes("stairs")) return configs.stairs;
+    if(n.includes("roof") || n.includes("rafter")) return configs["roof/rafter"];
+    if(n.includes("spacing")) return configs.spacing;
+    if(n.includes("material") || n.includes("waste")) return configs.waste;
+        return null;
+  }
+
+  function renderToolInputs(cfg){
+    heading.textContent=cfg.title;
+    sub.textContent=cfg.sub;
+    fields.innerHTML=cfg.fields.map((f,i)=>`
+      <div class="tool-field">
+        <label for="tool-${f[1]}">${f[0]}</label>
+        <input id="tool-${f[1]}" data-tool-field="${f[1]}" type="text"
+          inputmode="none" placeholder="${f[2]}" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>`).join("") +
+      `<div class="tool-live-note">Values are reflected in the live construction visual above.</div>`;
+  }
+
+  function switchForButton(btn){
+    const label=(btn.innerText || btn.textContent || "").trim();
+    const cfg=configFor(label);
+    if(cfg){
+      document.body.classList.add("special-tool-active");
+      panel.hidden=false;
+      renderToolInputs(cfg);
+      const firstToolInput=document.querySelector("#toolFields input");
+      if(firstToolInput) activeBuildCalcInput=firstToolInput;
+      if(cfg.title==="Rise / Run"){
+        const oldRise=document.getElementById("riseInput");
+        const oldRun=document.getElementById("runInput");
+        const newRise=document.querySelector('[data-tool-field="rise"]');
+        const newRun=document.querySelector('[data-tool-field="run"]');
+        if(newRise && oldRise) newRise.value=oldRise.value;
+        if(newRun && oldRun) newRun.value=oldRun.value;
+      }
+    }else{
+      document.body.classList.remove("special-tool-active");
+      panel.hidden=true;
+      fields.innerHTML="";
+    }
+  }
+
+  const buttons=[...document.querySelectorAll('button')].filter(b=>{
+    const t=(b.innerText||b.textContent||"").toLowerCase();
+    return /calculator|rise|stairs|roof|rafter|spacing|material|waste|scale/.test(t);
+  });
+  buttons.forEach(b=>b.addEventListener("click",()=>switchForButton(b)));
+
+document.querySelectorAll('.tool-btn[data-tool="waste"]').forEach(function(b){
+  b.addEventListener("click",function(){
+    setTimeout(function(){
+      try{
+        var cfg=configFor("Material");
+        if(cfg) switchForButton(b);
+      }catch(e){}
+    },0);
+  });
+});
+
+
+  // Keep calculator as the initial mode.
+  document.body.classList.remove("special-tool-active");
+  panel.hidden=true;
+})();
+</script>
+
+
+
+<nav class="buildcalc-bottom-nav bottom-nav" aria-label="BuildCalc navigation">
+  <button type="button" class="buildcalc-nav-item active" data-bottom-nav="tools" aria-label="Tools">
+    <span class="footer-icon-wrap">
+      <svg class="footer-icon footer-home" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.5 10.5 12 3l8.5 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-5v-6h-4v6H5a1.5 1.5 0 0 1-1.5-1.5v-9Z"/>
+      </svg>
+    </span>
+    <span class="footer-label">Tools</span>
+  </button>
+  <button type="button" class="buildcalc-nav-item" data-bottom-nav="history" aria-label="History">
+    <span class="footer-icon-wrap">
+      <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5"/>
+        <path d="M12 7.2v5.2l3.5 2"/>
+      </svg>
+    </span>
+    <span class="footer-label">History</span>
+  </button>
+  <button type="button" class="buildcalc-nav-item" data-bottom-nav="saved" aria-label="Saved">
+    <span class="footer-icon-wrap">
+      <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v16l-6.5-4-6.5 4V5A1.5 1.5 0 0 1 7 3.5Z"/>
+      </svg>
+    </span>
+    <span class="footer-label">Saved</span>
+  </button>
+  <button type="button" class="buildcalc-nav-item" data-bottom-nav="more" aria-label="More">
+    <span class="footer-icon-wrap">
+      <svg class="footer-icon footer-more" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="5" cy="12" r="1.5"/>
+        <circle cx="12" cy="12" r="1.5"/>
+        <circle cx="19" cy="12" r="1.5"/>
+      </svg>
+    </span>
+    <span class="footer-label">More</span>
+  </button>
+</nav>
+
+<div id="appSheetBackdrop" class="app-sheet-backdrop" hidden></div>
+
+<section id="historySheet" class="app-sheet" hidden aria-label="Calculation history">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div>
+      <h2>History</h2>
+      <p>Your recent BuildCalc calculations.</p>
+    </div>
+    <button type="button" class="sheet-close" aria-label="Close">×</button>
+  </div>
+  <div id="historyList" class="sheet-list"></div>
+  <button type="button" id="clearHistoryBtn" class="sheet-secondary">Clear History</button>
+</section>
+
+<section id="savedSheet" class="app-sheet" hidden aria-label="Saved calculations">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div>
+      <h2>Saved</h2>
+      <p>Calculations you want to keep.</p>
+    </div>
+    <button type="button" class="sheet-close" aria-label="Close">×</button>
+  </div>
+  <div id="savedList" class="sheet-list"></div>
+</section>
+
+<section id="moreSheet" class="app-sheet" hidden aria-label="More BuildCalc options">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div>
+      <h2>More</h2>
+      <p>BuildCalc information and preferences.</p>
+    </div>
+    <button type="button" class="sheet-close" aria-label="Close">×</button>
+  </div>
+  
+<div class="setting-group" id="appearanceSetting">
+  <div class="setting-title">Appearance</div>
+  <div class="setting-subtitle">Choose how BuildCalc looks.</div>
+  <div class="appearance-setting" role="group" aria-label="Appearance">
+    <button type="button" class="appearance-option" data-appearance="system">System</button>
+    <button type="button" class="appearance-option" data-appearance="light">Light</button>
+    <button type="button" class="appearance-option" data-appearance="dark">Dark</button>
+  </div>
+</div>
+
+<div class="more-menu">
+    <button type="button" data-more-action="settings"><span>Settings</span><b>›</b></button>
+    <button type="button" data-more-action="help"><span>Help & Tips</span><b>›</b></button>
+    <button type="button" data-more-action="about"><span>About BuildCalc</span><b>›</b></button>
+  </div>
+  <div id="moreDetail" class="more-detail" hidden></div>
+</section>
+
+
+<script>
+(function(){
+  const backdrop=document.getElementById("appSheetBackdrop");
+  const sheets={
+    history:document.getElementById("historySheet"),
+    saved:document.getElementById("savedSheet"),
+    more:document.getElementById("moreSheet")
+  };
+  const historyList=document.getElementById("historyList");
+  const savedList=document.getElementById("savedList");
+  const SAVED_KEY="buildcalc_saved_v1";
+  const EXTRA_HISTORY_KEY="buildcalc_history_v1";
+
+  function readJSON(key,fallback=[]){
+    try{return JSON.parse(localStorage.getItem(key)||"null")||fallback}catch(e){return fallback}
+  }
+  function writeJSON(key,val){localStorage.setItem(key,JSON.stringify(val))}
+  function normalizeItem(x){
+    if(!x)return null;
+    if(typeof x==="string"){
+      const parts=x.split("=");
+      return {expression:(parts[0]||x).trim(),result:(parts.slice(1).join("=")||"").trim()};
+    }
+    return {
+      expression:String(x.expression ?? x.expr ?? x.input ?? x.calculation ?? ""),
+      result:String(x.result ?? x.answer ?? x.output ?? "")
+    };
+  }
+  function existingHistory(){
+    const keys=["history","calcHistory","buildcalcHistory","buildcalc_history",EXTRA_HISTORY_KEY];
+    let out=[];
+    keys.forEach(k=>{
+      const arr=readJSON(k,[]);
+      if(Array.isArray(arr)) out=out.concat(arr.map(normalizeItem).filter(Boolean));
+    });
+    const seen=new Set();
+    return out.filter(x=>{
+      const id=x.expression+"|"+x.result;
+      if(!x.expression || seen.has(id))return false;
+      seen.add(id);return true;
+    }).slice(0,50);
+  }
+  function saved(){return readJSON(SAVED_KEY,[]).map(normalizeItem).filter(Boolean)}
+  function isSaved(item){return saved().some(x=>x.expression===item.expression && x.result===item.result)}
+  function toggleSave(item){
+    let arr=saved();
+    const i=arr.findIndex(x=>x.expression===item.expression&&x.result===item.result);
+    if(i>=0)arr.splice(i,1);else arr.unshift(item);
+    writeJSON(SAVED_KEY,arr.slice(0,100));
+    renderHistory();renderSaved();
+  }
+  function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+  function card(item,type){
+    const active=isSaved(item);
+    return `<div class="${type}-card">
+      <div>
+        <div class="${type}-expression">${esc(item.expression)}</div>
+        <div class="${type}-result">${esc(item.result||"")}</div>
+      </div>
+      <div class="card-actions">
+        <button type="button" data-reopen="${encodeURIComponent(JSON.stringify(item))}" title="Reopen">↗</button>
+        <button type="button" class="${active?"save-active":""}" data-save="${encodeURIComponent(JSON.stringify(item))}" title="${active?"Remove from saved":"Save"}">☆</button>
+      </div>
+    </div>`;
+  }
+  function renderHistory(){
+    const arr=existingHistory();
+    historyList.innerHTML=arr.length?arr.map(x=>card(x,"history")).join(""):`<div class="sheet-empty">No calculations yet.<br>Use BuildCalc and your results will appear here.</div>`;
+  }
+  function renderSaved(){
+    const arr=saved();
+    savedList.innerHTML=arr.length?arr.map(x=>card(x,"saved")).join(""):`<div class="sheet-empty">Nothing saved yet.<br>Save a useful calculation from History.</div>`;
+  }
+  function close(){
+    Object.values(sheets).forEach(s=>s.hidden=true);
+    backdrop.hidden=true;
+  }
+  function open(name){
+    close();
+    if(name==="history")renderHistory();
+    if(name==="saved")renderSaved();
+    sheets[name].hidden=false;backdrop.hidden=false;
+  }
+  backdrop.addEventListener("click",close);
+  document.querySelectorAll(".sheet-close").forEach(b=>b.addEventListener("click",close));
+
+  document.addEventListener("click",e=>{
+    const saveBtn=e.target.closest("[data-save]");
+    if(saveBtn){toggleSave(JSON.parse(decodeURIComponent(saveBtn.dataset.save)));return}
+    const reopen=e.target.closest("[data-reopen]");
+    if(reopen){
+      const item=JSON.parse(decodeURIComponent(reopen.dataset.reopen));
+      close();
+      const input=document.querySelector('input[type="text"]:not([data-tool-field])');
+      if(input){
+        input.value=item.expression;
+        input.dispatchEvent(new Event("input",{bubbles:true}));
+        input.focus();
+      }
+      return;
+    }
+  });
+
+  document.getElementById("clearHistoryBtn").addEventListener("click",()=>{
+    ["history","calcHistory","buildcalcHistory","buildcalc_history",EXTRA_HISTORY_KEY].forEach(k=>localStorage.removeItem(k));
+    renderHistory();
+  });
+
+  // Bottom navigation mapping, preserving the current BuildCalc layout.
+  const navButtons=[...document.querySelectorAll(".bottom-nav button, .bottom-nav .nav-item")];
+  navButtons.forEach(btn=>{
+    const t=(btn.innerText||btn.textContent||"").trim().toLowerCase();
+    if(t.includes("calculate") || t.includes("tools")){
+      btn.addEventListener("click",()=>{close();window.scrollTo({top:0,behavior:"smooth"})});
+    }else if(t.includes("history")){
+      btn.addEventListener("click",()=>open("history"));
+    }else if(t.includes("saved")){
+      btn.addEventListener("click",()=>open("saved"));
+    }else if(t.includes("more")){
+      btn.addEventListener("click",()=>open("more"));
+    }
+  });
+
+  document.querySelectorAll("[data-more-action]").forEach(btn=>btn.addEventListener("click",()=>{
+    const detail=document.getElementById("moreDetail");
+    const a=btn.dataset.moreAction;
+    detail.hidden=false;
+    if(a==="settings"){
+      detail.innerHTML="<b>Settings</b><br>Use the gear in the BuildCalc header for calculator precision and preferences.";
+    }else if(a==="help"){
+      detail.innerHTML="<b>Help & Tips</b><br>Calculator handles free-form construction math. Material, Rise/Run, Stairs, Roof/Rafter, and Spacing each use dedicated inputs. Scale is set in Settings.";
+    }else{
+      detail.innerHTML="<b>BuildCalc</b><br>Visual Construction Calculator — construction math paired with live construction geometry.";
+    }
+  }));
+})();
+</script>
+
+
+<script>
+(function(){
+  const nav=document.querySelector(".buildcalc-bottom-nav");
+  if(!nav)return;
+  function setActive(name){
+    nav.querySelectorAll("[data-bottom-nav]").forEach(b=>b.classList.toggle("active",b.dataset.bottomNav===name));
+  }
+  function closeSheets(){
+    document.querySelectorAll(".app-sheet").forEach(s=>s.hidden=true);
+    const bd=document.getElementById("appSheetBackdrop");
+    if(bd)bd.hidden=true;
+  }
+  function openSheet(name){
+    closeSheets();
+    const sheet=document.getElementById(name+"Sheet");
+    const bd=document.getElementById("appSheetBackdrop");
+    if(sheet)sheet.hidden=false;
+    if(bd)bd.hidden=false;
+  }
+  nav.addEventListener("click",e=>{
+    const b=e.target.closest("[data-bottom-nav]");
+    if(!b)return;
+    const name=b.dataset.bottomNav;
+    setActive(name);
+    if(name==="tools"){
+      closeSheets();
+      window.scrollTo({top:0,behavior:"smooth"});
+    }else{
+      openSheet(name);
+    }
+  });
+  document.querySelectorAll(".sheet-close").forEach(b=>b.addEventListener("click",()=>setActive("tools")));
+  const bd=document.getElementById("appSheetBackdrop");
+  if(bd)bd.addEventListener("click",()=>setActive("tools"));
+})();
+</script>
+
+
+
+
+
+<script>
+(function(){
+  const results=document.getElementById("riseRunResults");
+  const learnToggle=document.getElementById("learnToggle");
+  const learnPanel=document.getElementById("learnPanel");
+  if(!results || !learnToggle || !learnPanel) return;
+
+  function mixedLocal(t){
+    t=(t||"").trim();
+    if(!t)return 0;
+    if(t.includes(" ")){
+      const parts=t.split(/\s+/);
+      const whole=parseFloat(parts[0])||0;
+      const frac=parts[1]||"";
+      if(frac.includes("/")){
+        const [a,b]=frac.split("/").map(Number);
+        return whole + (b ? a/b : 0);
+      }
+      return parseFloat(t)||0;
+    }
+    if(t.includes("/")){
+      const [a,b]=t.split("/").map(Number);
+      return b ? a/b : 0;
+    }
+    return parseFloat(t)||0;
+  }
+
+  function parseLengthLocal(raw){
+    let s=String(raw||"")
+      .replace(/[′’‘‛`]/g,"'")
+      .replace(/[″”“‟]/g,'"')
+      .replace(/\u00a0/g," ")
+      .trim();
+    if(!s)return NaN;
+
+    // feet + inches
+    const ftMatch=s.match(/(-?\d+(?:\.\d+)?)\s*'/);
+    const inMatch=s.match(/(?:^|')\s*(-?\d+(?:\s+\d+\/\d+|\.\d+)?|-?\d+\/\d+)\s*"/);
+    if(ftMatch){
+      const ft=parseFloat(ftMatch[1]);
+      let inches=0;
+      if(inMatch) inches=mixedLocal(inMatch[1]);
+      return ft + inches/12;
+    }
+    if(s.includes('"')){
+      const n=mixedLocal(s.replace('"',"").trim());
+      return n/12;
+    }
+    if(/^-?\d+(?:\.\d+)?$/.test(s)) return parseFloat(s); // assume feet
+    return NaN;
+  }
+
+  function parseLength(raw){
+    try{
+      if(typeof parseToken==="function"){
+        const d=parseToken(raw);
+        if(d && typeof d.value==="number" && (d.power===1 || d.pow===1 || d.unitPower===1)) return d.value;
+        if(d && typeof d.v==="number") return d.v;
+      }
+    }catch(e){}
+    return parseLengthLocal(raw);
+  }
+
+  function fmt(ft){
+    const units=(document.body&&document.body.dataset.units)||localStorage.getItem("bc-units")||"ftin";
+    if(units==="decimalft") return `${ft.toFixed(3).replace(/\.?0+$/,"")} ft`;
+    if(units==="inches") return `${(ft*12).toFixed(3).replace(/\.?0+$/,"")} in`;
+    try{
+      if(typeof fmtLength==="function") return fmtLength(ft);
+    }catch(e){}
+    return `${ft.toFixed(3).replace(/\.?0+$/,"")} ft`;
+  }
+
+  function resultCard(label,value){
+    return `<div class="riserun-result-card">
+      <span class="riserun-result-label">${label}</span>
+      <span class="riserun-result-value">${value}</span>
+    </div>`;
+  }
+
+  function updateRiseRunCards(){
+    const riseInput=document.querySelector('[data-tool-field="rise"]');
+    const runInput=document.querySelector('[data-tool-field="run"]');
+    if(!riseInput || !runInput || document.body.classList.contains("special-tool-active")===false){
+      results.hidden=true; learnToggle.hidden=true; learnPanel.hidden=true; return;
+    }
+
+    const rise=parseLength(riseInput.value);
+    const run=parseLength(runInput.value);
+
+    if(window.__buildcalcShowOnlyResults) window.__buildcalcShowOnlyResults("rise/run");
+    results.hidden=false;
+    learnToggle.hidden=false;
+
+    if(!Number.isFinite(rise) || !Number.isFinite(run) || rise<=0 || run<=0){
+      results.innerHTML=`<div class="riserun-error">Enter a valid Rise and Run greater than 0. You can use values like <b>4′</b>, <b>12′-6″</b>, or <b>48″</b>.</div>`;
+      syncLegacyRiseRun(null,null);
+      return;
+    }
+
+    const diag=Math.sqrt(rise*rise+run*run);
+    const angle=Math.atan2(rise,run)*180/Math.PI;
+    const slope=(rise/run)*100;
+
+    results.innerHTML=
+      resultCard("Diagonal",fmt(diag))+
+      resultCard("Angle",angle.toFixed(1)+"°")+
+      resultCard("Slope",slope.toFixed(1)+"%")+
+      resultCard("Rise : Run",(rise/run).toFixed(3)+" : 1");
+
+    syncLegacyRiseRun(rise,run);
+  }
+
+  function syncLegacyRiseRun(rise,run){
+    const oldRise=document.getElementById("riseInput");
+    const oldRun=document.getElementById("runInput");
+    const newRise=document.querySelector('[data-tool-field="rise"]');
+    const newRun=document.querySelector('[data-tool-field="run"]');
+
+    if(oldRise && newRise) oldRise.value=newRise.value;
+    if(oldRun && newRun) oldRun.value=newRun.value;
+
+    try{
+      if(typeof window.__buildcalcLegacyRiseRun==="function"){
+        window.__buildcalcLegacyRiseRun();
+      }
+    }catch(e){
+      console.warn("Rise/Run visual update failed:",e);
+    }
+  }
+
+  learnToggle.addEventListener("click",()=>{
+    const open=learnToggle.getAttribute("aria-expanded")==="true";
+    learnToggle.setAttribute("aria-expanded",String(!open));
+    learnPanel.hidden=open;
+  });
+
+  document.addEventListener("input",e=>{
+    if(e.target && (e.target.dataset.toolField==="rise" || e.target.dataset.toolField==="run")){
+      updateRiseRunCards();
+    }
+  });
+
+  document.addEventListener("change",e=>{
+    if(e.target && (e.target.dataset.toolField==="rise" || e.target.dataset.toolField==="run")){
+      updateRiseRunCards();
+    }
+  });
+
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("button");
+    if(!b)return;
+    const t=(b.innerText||b.textContent||"").toLowerCase();
+    if(t.includes("rise")&&t.includes("run")){
+      setTimeout(updateRiseRunCards,0);
+    }else if(/calculator|material|stairs|roof|rafter|spacing|waste|scale/.test(t)){
+      setTimeout(()=>{
+        results.hidden=true;
+        learnToggle.hidden=true;
+        learnPanel.hidden=true;
+      },0);
+    }
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function removeDuplicateRiseRunLayer(){
+    document.querySelectorAll("#dynamicRiseRunLayer").forEach(el=>el.remove());
+  }
+  removeDuplicateRiseRunLayer();
+  document.addEventListener("click",removeDuplicateRiseRunLayer);
+})();
+</script>
+
+
+<div id="betaSettings" aria-hidden="true">
+ <div class="beta-settings-card">
+  <div class="beta-settings-handle"></div>
+  <div class="beta-settings-head"><div><h3>Settings</h3><p>Choose how BuildCalc works for you.</p></div><button id="betaSettingsClose" type="button">×</button></div>
+  <div class="beta-setting-list">
+   <button class="beta-row" id="betaRounding" type="button"><span class="beta-row-icon">⅛</span><span class="beta-row-copy"><b>Rounding</b><small>Construction dimension precision</small></span><span class="beta-row-value" id="betaRoundValue">1/16″</span><span class="beta-chevron">›</span></button>
+   <button class="beta-row" id="betaUnitsBtn" type="button"><span class="beta-row-icon">′″</span><span class="beta-row-copy"><b>Units</b><small>Default measurement format</small></span><span class="beta-row-value" id="betaUnitsValue">Feet &amp; Inches</span><span class="beta-chevron">›</span></button>
+   <button class="beta-row" id="betaScaleBtn" type="button"><span class="beta-row-icon">⌁</span><span class="beta-row-copy"><b>Default Scale</b><small>Architectural drawing scale</small></span><span class="beta-row-value" id="betaScaleValue">1/2″ = 1′-0″</span><span class="beta-chevron">›</span></button>
+   <label class="beta-row"><span class="beta-row-icon">?</span><span class="beta-row-copy"><b>Learning Mode</b><small>Show optional Learn explanations</small></span><input id="betaLearning" type="checkbox" checked><span class="beta-switch"></span></label>
+   <button class="beta-row" id="betaAboutBtn" type="button"><span class="beta-row-icon">i</span><span class="beta-row-copy"><b>About BuildCalc</b><small>Visual Construction Calculator</small></span><span class="beta-row-value">Beta</span><span class="beta-chevron">›</span></button>
+  </div>
+  <div class="beta-sub" id="betaPrecision" hidden><b style="font-size:11px">Rounding Precision</b><div class="beta-precision"><button data-den="2">1/2″</button><button data-den="4">1/4″</button><button data-den="8">1/8″</button><button data-den="16">1/16″</button><button data-den="32">1/32″</button></div></div>
+
+  <div class="beta-sub" id="betaUnitsPanel" hidden><b style="font-size:11px">Units</b><div class="beta-option-list">
+   <button type="button" data-unit="ftin">Feet &amp; Inches <small>12′-6 1/2″</small></button>
+   <button type="button" data-unit="decimalft">Decimal Feet <small>12.542 ft</small></button>
+   <button type="button" data-unit="inches">Inches <small>150.5 in</small></button>
+  </div></div>
+  <div class="beta-sub" id="betaScalePanel" hidden><b style="font-size:11px">Default Architectural Scale</b><div class="beta-option-list">
+   <button type="button" data-scale="1/8">1/8″ = 1′-0″</button>
+   <button type="button" data-scale="1/4">1/4″ = 1′-0″</button>
+   <button type="button" data-scale="3/8">3/8″ = 1′-0″</button>
+   <button type="button" data-scale="1/2">1/2″ = 1′-0″</button>
+   <button type="button" data-scale="3/4">3/4″ = 1′-0″</button>
+   <button type="button" data-scale="1">1″ = 1′-0″</button>
+  </div></div>
+  <div class="beta-sub" id="betaAbout" hidden><b>BuildCalc</b><span>Visual Construction Calculator</span>Calculate it. See it. Understand it.<br><small>Beta</small></div>
+ </div>
+</div>
+
+<script>
+(function(){
+ const modal=document.getElementById("betaSettings"), close=document.getElementById("betaSettingsClose");
+ const round=document.getElementById("betaRounding"), precision=document.getElementById("betaPrecision");
+ const unitsBtn=document.getElementById("betaUnitsBtn"), unitsPanel=document.getElementById("betaUnitsPanel"), unitsValue=document.getElementById("betaUnitsValue");
+ const scaleBtn=document.getElementById("betaScaleBtn"), scalePanel=document.getElementById("betaScalePanel"), scaleValue=document.getElementById("betaScaleValue");
+ const aboutBtn=document.getElementById("betaAboutBtn"), about=document.getElementById("betaAbout");
+ const learning=document.getElementById("betaLearning"), value=document.getElementById("betaRoundValue");
+ function open(){modal.classList.add("open");modal.setAttribute("aria-hidden","false")}
+ function shut(){modal.classList.remove("open");modal.setAttribute("aria-hidden","true")}
+ // Capture gear clicks regardless of the original handler.
+ document.addEventListener("click",function(e){
+   const b=e.target.closest("button");
+   if(!b)return;
+   const label=((b.getAttribute("aria-label")||"")+" "+(b.textContent||"")).toLowerCase();
+   if(label.includes("setting") || b.id==="settingsBtn" || b.id==="settingsButton"){
+     e.preventDefault();e.stopImmediatePropagation();open();
+   }
+ },true);
+ close.addEventListener("click",shut);
+ modal.addEventListener("click",e=>{if(e.target===modal)shut()});
+ function hideSettingsSubs(except){[precision,unitsPanel,scalePanel,about].forEach(p=>{if(p&&p!==except)p.hidden=true})}
+ round.addEventListener("click",()=>{const show=precision.hidden;hideSettingsSubs();precision.hidden=!show});
+ if(unitsBtn) unitsBtn.addEventListener("click",()=>{const show=unitsPanel.hidden;hideSettingsSubs();unitsPanel.hidden=!show});
+ if(scaleBtn) scaleBtn.addEventListener("click",()=>{const show=scalePanel.hidden;hideSettingsSubs();scalePanel.hidden=!show});
+ aboutBtn.addEventListener("click",()=>{const show=about.hidden;hideSettingsSubs();about.hidden=!show});
+ function setLearn(on){learning.checked=on;document.body.classList.toggle("learning-disabled",!on);localStorage.setItem("bc-learn",on?"1":"0")}
+ setLearn(localStorage.getItem("bc-learn")!=="0"); learning.addEventListener("change",()=>setLearn(learning.checked));
+ function setDen(den){
+   value.textContent="1/"+den+"″";localStorage.setItem("bc-den",den);
+   document.querySelectorAll("[data-den]").forEach(x=>x.classList.toggle("selected",x.dataset.den==den));
+   const sel=document.getElementById("precision");
+   if(sel){
+     const vals=[String(den),String(1/den),"1/"+den];
+     const found=vals.find(v=>[...sel.options].some(o=>o.value===v));
+     if(found){sel.value=found;sel.dispatchEvent(new Event("change",{bubbles:true}))}
+   }
+ }
+ document.querySelectorAll("[data-den]").forEach(x=>x.addEventListener("click",()=>setDen(x.dataset.den)));
+ setDen(localStorage.getItem("bc-den")||"16");
+
+ const unitNames={ftin:"Feet & Inches",decimalft:"Decimal Feet",inches:"Inches"};
+ function setUnits(unit){
+   if(!unitNames[unit])unit="ftin";
+   localStorage.setItem("bc-units",unit);
+   document.body.dataset.units=unit;
+   if(unitsValue)unitsValue.textContent=unitNames[unit];
+   document.querySelectorAll("[data-unit]").forEach(b=>b.classList.toggle("selected",b.dataset.unit===unit));
+   try{if(typeof update==="function")update(false)}catch(e){}
+ }
+ document.querySelectorAll("[data-unit]").forEach(b=>b.addEventListener("click",()=>setUnits(b.dataset.unit)));
+ setUnits(localStorage.getItem("bc-units")||"ftin");
+
+ const scaleLabels={"1/8":"1/8″ = 1′-0″","1/4":"1/4″ = 1′-0″","3/8":"3/8″ = 1′-0″","1/2":"1/2″ = 1′-0″","3/4":"3/4″ = 1′-0″","1":"1″ = 1′-0″"};
+ function setScale(sc){
+   if(!scaleLabels[sc])sc="1/2";
+   localStorage.setItem("bc-scale",sc);
+   if(scaleValue)scaleValue.textContent=scaleLabels[sc];
+   document.querySelectorAll("[data-scale]").forEach(b=>b.classList.toggle("selected",b.dataset.scale===sc));
+   document.querySelectorAll("[data-scale-display],#scaleQuickSetting,.scale-label").forEach(el=>el.textContent="Scale: "+scaleLabels[sc]);
+ }
+ document.querySelectorAll("[data-scale]").forEach(b=>b.addEventListener("click",()=>setScale(b.dataset.scale)));
+ setScale(localStorage.getItem("bc-scale")||"1/2");
+})();
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  document.documentElement.style.visibility="visible";
+  document.body.style.visibility="visible";
+  document.body.style.opacity="1";
+  var app=document.querySelector(".app");
+  if(app){
+    app.style.visibility="visible";
+    app.style.opacity="1";
+    app.style.pointerEvents="auto";
+  }
+  var launch=document.getElementById("buildcalcLaunch");
+  if(launch) launch.remove();
+});
+</script>
+
+
+<script>
+(function(){
+  const intro=document.getElementById("buildcalcIntro");
+  if(!intro)return;
+
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const visibleFor = reduced ? 220 : 720;
+  let removed=false;
+
+  function dismissIntro(){
+    if(removed)return;
+    removed=true;
+    intro.classList.add("is-hiding");
+    window.setTimeout(()=>{
+      if(intro && intro.parentNode) intro.remove();
+    }, reduced ? 30 : 320);
+  }
+
+  // App is already rendered underneath. This is visual only and never captures taps.
+  window.setTimeout(dismissIntro, visibleFor);
+
+  // Fail-safe in case timers/layout behave oddly in preview.
+  window.setTimeout(()=>{
+    if(intro && intro.parentNode) intro.remove();
+  }, 1800);
+})();
+</script>
+
+
+<script>
+(function(){
+  const results=document.getElementById("materialResults");
+  const toolFields=document.getElementById("toolFields");
+  if(!results || !toolFields) return;
+
+  let materialMode=localStorage.getItem("bc-material-mode")||"area";
+  if(materialMode==="general") materialMode="area";
+  if(!["area","drywall","concrete"].includes(materialMode)) materialMode="area";
+
+  let openingType=localStorage.getItem("bc-opening-type")||"";
+  if(!["","door","window","arch"].includes(openingType)) openingType="";
+
+  function openingIcon(type){
+    if(type==="door"){
+      return `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 17V3.5h9.5V17"/><path d="M7 17V6h7"/><circle cx="12" cy="11.5" r=".7" fill="currentColor" stroke="none"/></svg>`;
+    }
+    if(type==="window"){
+      return `<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3.5" y="4" width="13" height="12"/><path d="M10 4v12M3.5 10h13"/></svg>`;
+    }
+    return `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 17V10a6 6 0 0 1 12 0v7"/><path d="M4 17h12"/></svg>`;
+  }
+
+  function openingDefaults(type){
+    if(type==="door") return {width:"3′",height:"7′",rise:""};
+    if(type==="window") return {width:"4′",height:"3′",rise:""};
+    if(type==="arch") return {width:"4′",height:"6′",rise:"2′"};
+    return {width:"",height:"",rise:""};
+  }
+
+  function getOpeningInputs(){
+    return {
+      width:document.getElementById("materialOpeningWidth"),
+      height:document.getElementById("materialOpeningHeight"),
+      rise:document.getElementById("materialOpeningRise")
+    };
+  }
+
+  function circularSegmentArea(chord,sagitta){
+    if(!Number.isFinite(chord)||!Number.isFinite(sagitta)||chord<=0||sagitta<=0) return 0;
+    const half=chord/2;
+    const R=(sagitta*sagitta+half*half)/(2*sagitta);
+    if(!Number.isFinite(R)||R<=0) return 0;
+    const d=R-sagitta;
+    const theta=Math.acos(Math.max(-1,Math.min(1,d/R)));
+    const radicand=Math.max(0,2*R*sagitta-sagitta*sagitta);
+    return R*R*theta-d*Math.sqrt(radicand);
+  }
+
+  function openingArea(){
+    if(materialMode==="concrete" || !openingType) return 0;
+    const ins=getOpeningInputs();
+    const ow=parseLen(ins.width?.value);
+    const oh=parseLen(ins.height?.value);
+    if(!Number.isFinite(ow)||!Number.isFinite(oh)||ow<=0||oh<=0) return 0;
+
+    if(openingType==="arch"){
+      const rise=parseLen(ins.rise?.value);
+      if(!Number.isFinite(rise)||rise<=0) return 0;
+      return ow*oh + circularSegmentArea(ow,rise);
+    }
+    return ow*oh;
+  }
+
+  function openingConfig(){
+    const ins=getOpeningInputs();
+    return {
+      type:openingType,
+      area:openingArea(),
+      width:parseLen(ins.width?.value),
+      height:parseLen(ins.height?.value),
+      rise:parseLen(ins.rise?.value)
+    };
+  }
+
+  function updateOpeningSummary(){
+    const el=document.getElementById("materialOpeningSummary");
+    if(!el) return;
+    if(!openingType){
+      el.textContent="No opening selected. Nothing will be subtracted.";
+      return;
+    }
+    const cfg=openingConfig();
+    if(cfg.area>0){
+      const name=openingType==="door"?"Door":openingType==="window"?"Window":"Arch";
+      el.textContent=`${name} opening = ${cfg.area.toFixed(1)} SF subtracted.`;
+    }else{
+      el.textContent=openingType==="arch"
+        ?"Enter width, straight height, and arch rise."
+        :"Enter a width and height for this opening.";
+    }
+  }
+
+  function ensureOpeningAssistant(){
+    const old=document.getElementById("materialOpeningAssist");
+    if(materialMode==="concrete"){
+      if(old) old.remove();
+      return;
+    }
+    if(old) return;
+
+    const selector=document.getElementById("materialModeSelector");
+    if(!selector) return;
+
+    const box=document.createElement("div");
+    box.id="materialOpeningAssist";
+    box.className="material-opening-assist";
+    box.innerHTML=`
+      <div class="material-opening-title">
+        <strong>Opening to subtract</strong>
+        <span>Optional</span>
+      </div>
+      <div class="material-opening-types">
+        <button type="button" class="material-opening-type" data-opening-type="door">${openingIcon("door")}<span>Door</span></button>
+        <button type="button" class="material-opening-type" data-opening-type="window">${openingIcon("window")}<span>Window</span></button>
+        <button type="button" class="material-opening-type" data-opening-type="arch">${openingIcon("arch")}<span>Arch</span></button>
+      </div>
+      <div class="material-opening-dims" id="materialOpeningDims">
+        <div>
+          <label for="materialOpeningWidth">Width</label>
+          <input id="materialOpeningWidth" type="text" inputmode="none" autocomplete="off" placeholder="3′">
+        </div>
+        <div>
+          <label for="materialOpeningHeight" id="materialOpeningHeightLabel">Height</label>
+          <input id="materialOpeningHeight" type="text" inputmode="none" autocomplete="off" placeholder="7′">
+        </div>
+        <div id="materialOpeningRiseWrap" style="display:none">
+          <label for="materialOpeningRise">Arch Rise</label>
+          <input id="materialOpeningRise" type="text" inputmode="none" autocomplete="off" placeholder="2′">
+        </div>
+      </div>
+      <div class="material-opening-summary" id="materialOpeningSummary"></div>`;
+
+    selector.insertAdjacentElement("afterend",box);
+
+    box.querySelectorAll("[data-opening-type]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const next=btn.dataset.openingType;
+        openingType=(openingType===next)?"":next;
+        localStorage.setItem("bc-opening-type",openingType);
+
+        if(openingType){
+          const defaults=openingDefaults(openingType);
+          const ins=getOpeningInputs();
+          if(ins.width) ins.width.value=defaults.width;
+          if(ins.height) ins.height.value=defaults.height;
+          if(ins.rise) ins.rise.value=defaults.rise;
+        }
+        paintOpeningAssistant();
+        updateMaterial();
+      });
+    });
+
+    box.querySelectorAll("input").forEach(inp=>{
+      inp.addEventListener("focus",()=>{ if(typeof activeBuildCalcInput!=="undefined") activeBuildCalcInput=inp; });
+      inp.addEventListener("input",()=>updateMaterial());
+    });
+
+    paintOpeningAssistant();
+  }
+
+  function paintOpeningAssistant(){
+    const box=document.getElementById("materialOpeningAssist");
+    if(!box) return;
+
+    box.querySelectorAll("[data-opening-type]").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.openingType===openingType);
+    });
+
+    const dims=document.getElementById("materialOpeningDims");
+    const riseWrap=document.getElementById("materialOpeningRiseWrap");
+    const heightLabel=document.getElementById("materialOpeningHeightLabel");
+    const legacyField=field("openings")?.closest(".tool-field");
+
+    if(materialMode!=="concrete" && legacyField) legacyField.style.display="none";
+
+    if(!openingType){
+      if(dims) dims.style.display="none";
+    }else{
+      if(dims){
+        dims.style.display="grid";
+        dims.classList.toggle("arch-mode",openingType==="arch");
+      }
+      if(riseWrap) riseWrap.style.display=openingType==="arch"?"block":"none";
+      if(heightLabel) heightLabel.textContent=openingType==="arch"?"Straight Height":"Height";
+    }
+
+    updateOpeningSummary();
+  }
+
+  function parseLengthLocal(raw){
+    let s=String(raw||"").replace(/[′’‘‛`]/g,"'").replace(/[″”“‟]/g,'"').replace(/\u00a0/g," ").trim();
+    if(!s)return NaN;
+    function mixed(t){
+      t=(t||"").trim();
+      if(!t)return 0;
+      if(t.includes(" ")){
+        const p=t.split(/\s+/); let v=parseFloat(p[0])||0;
+        if(p[1]&&p[1].includes("/")){const [a,b]=p[1].split("/").map(Number); if(b)v+=a/b}
+        return v;
+      }
+      if(t.includes("/")){const [a,b]=t.split("/").map(Number); return b?a/b:0}
+      return parseFloat(t)||0;
+    }
+    const fm=s.match(/(-?\d+(?:\.\d+)?)\s*'/);
+    const im=s.match(/(?:^|')\s*(-?\d+(?:\s+\d+\/\d+|\.\d+)?|-?\d+\/\d+)\s*"/);
+    if(fm){const ft=parseFloat(fm[1]); return ft + (im?mixed(im[1])/12:0)}
+    if(s.includes('"')) return mixed(s.replace('"',""))/12;
+    if(/^-?\d+(?:\.\d+)?$/.test(s)) return parseFloat(s);
+    return NaN;
+  }
+
+  function parseLen(raw){
+    try{
+      if(typeof parseToken==="function"){
+        const d=parseToken(raw);
+        if(d && typeof d.value==="number") return d.value;
+        if(d && typeof d.v==="number") return d.v;
+      }
+    }catch(e){}
+    return parseLengthLocal(raw);
+  }
+
+  function money(n){
+    return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n);
+  }
+
+  function card(label,value,wide=false){
+    return `<div class="material-card${wide?" wide":""}"><span class="material-label">${label}</span><span class="material-value">${value}</span></div>`;
+  }
+
+  function activeMaterial(){
+    return [...document.querySelectorAll("button")].some(b=>{
+      const t=(b.innerText||b.textContent||"").trim().toLowerCase();
+      return b.classList.contains("active") && t==="material";
+    });
+  }
+
+  function ensureMaterialSelector(){
+    if(!activeMaterial()) return;
+    if(document.getElementById("materialModeSelector")) return;
+    const sel=document.createElement("div");
+    sel.id="materialModeSelector";
+    sel.className="material-selector";
+    sel.innerHTML=`<button type="button" data-material-mode="area">Area Material</button>
+                   <button type="button" data-material-mode="drywall">Drywall</button>
+                   <button type="button" data-material-mode="concrete">Concrete</button>`;
+    toolFields.prepend(sel);
+    sel.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+      materialMode=b.dataset.materialMode;
+      localStorage.setItem("bc-material-mode",materialMode);
+      configureFields();
+      updateMaterial();
+    }));
+    paintSelector();
+  }
+
+  function paintSelector(){
+    document.querySelectorAll("[data-material-mode]").forEach(b=>b.classList.toggle("active",b.dataset.materialMode===materialMode));
+  }
+
+  function field(name){return toolFields.querySelector(`[data-tool-field="${name}"]`)}
+
+  function setFieldUI(name,label,placeholder,visible=true){
+    const input=field(name);
+    if(!input) return;
+    const wrap=input.closest(".tool-field");
+    if(wrap) wrap.style.display=visible?"":"none";
+    const lab=wrap?.querySelector("label");
+    if(lab) lab.textContent=label;
+    input.placeholder=placeholder;
+    input.setAttribute("aria-label",label);
+  }
+
+  function configureFields(){
+    ensureMaterialSelector(); paintSelector();
+    ensureOpeningAssistant();
+
+    if(materialMode==="concrete"){
+      setFieldUI("length","Length","e.g. 20′ - 0″");
+      setFieldUI("width","Width","e.g. 10′ - 0″");
+      setFieldUI("openings","Thickness","e.g. 4″");
+      setFieldUI("waste","Overage Allowance (%)","e.g. 10");
+      setFieldUI("unitPrice","Price per CY ($)","e.g. 160");
+    }else if(materialMode==="drywall"){
+      setFieldUI("length","Wall Length","e.g. 12′ - 0″");
+      setFieldUI("width","Wall Height","e.g. 8′ - 0″");
+      setFieldUI("openings","Openings to Subtract (SF)","e.g. 21",false);
+      setFieldUI("waste","Waste Allowance (%)","e.g. 10");
+      setFieldUI("unitPrice","Price per 4′ × 8′ Sheet ($)","e.g. 15");
+    }else{
+      setFieldUI("length","Length","e.g. 12′ - 0″");
+      setFieldUI("width","Width / Height","e.g. 10′ - 0″");
+      setFieldUI("openings","Openings to Subtract (SF)","e.g. 0",false);
+      setFieldUI("waste","Waste Allowance (%)","e.g. 10");
+      setFieldUI("unitPrice","Unit Price ($ / SF)","e.g. 3.50");
+    }
+    paintOpeningAssistant();
+  }
+
+  function updateMaterial(){
+    if(!activeMaterial()){results.hidden=true;return}
+    ensureMaterialSelector(); configureFields();
+
+    const L=parseLen(field("length")?.value);
+    const W=parseLen(field("width")?.value);
+    const thirdRaw=field("openings")?.value||"";
+    const allowance=parseFloat(field("waste")?.value||"0")||0;
+    const price=parseFloat(field("unitPrice")?.value||"0")||0;
+    const openingCfg=openingConfig();
+
+    updateOpeningSummary();
+
+    if(typeof window.__buildcalcDrawMaterialVisual==="function"){
+      window.__buildcalcDrawMaterialVisual(materialMode,L,W,thirdRaw,allowance,openingCfg);
+    }
+
+    if(window.__buildcalcShowOnlyResults) window.__buildcalcShowOnlyResults("material");
+    results.hidden=false;
+
+    if(!Number.isFinite(L)||!Number.isFinite(W)||L<=0||W<=0){
+      results.innerHTML=`<div class="material-card wide"><span class="material-helper">Enter valid dimensions greater than 0.</span></div>`;
+      return;
+    }
+
+    // Shared starting point for Area Material, Drywall, and Concrete.
+    const grossArea=L*W;
+
+    if(materialMode==="concrete"){
+      const thickness=parseLen(thirdRaw);
+      if(!Number.isFinite(thickness)||thickness<=0){
+        results.innerHTML=
+          card("Slab Area",`${grossArea.toFixed(1)} SF`)+
+          `<div class="material-card wide"><span class="material-helper">Enter a concrete thickness greater than 0, such as 4″.</span></div>`;
+        return;
+      }
+
+      const cubicFeet=grossArea*thickness;
+      const cubicYards=cubicFeet/27;
+      const orderCY=cubicYards*(1+allowance/100);
+      const cost=orderCY*price;
+
+      results.innerHTML=
+        card("Slab Area",`${grossArea.toFixed(1)} SF`)+
+        card("Concrete Volume",`${cubicYards.toFixed(2)} CY`)+
+        card("With Overage",`${orderCY.toFixed(2)} CY`)+
+        card("Estimated Material Cost",money(cost))+
+        `<div class="material-card wide"><span class="material-helper">Concrete uses Length × Width × Thickness. BuildCalc converts the volume to cubic yards, then applies the overage allowance.</span></div>`;
+      return;
+    }
+
+    const openings=Math.max(0,openingCfg.area||0);
+    const net=Math.max(0,grossArea-openings);
+    const requiredArea=net*(1+allowance/100);
+
+    if(materialMode==="drywall"){
+      const sheetArea=32; // 4x8 sheet
+      const sheets=Math.max(0,Math.ceil(requiredArea/sheetArea));
+      const cost=sheets*price;
+      results.innerHTML=
+        card("Net Wall Area",`${net.toFixed(1)} SF`)+
+        card("With Waste",`${requiredArea.toFixed(1)} SF`)+
+        card("4′ × 8′ Sheets",String(sheets))+
+        card("Estimated Material Cost",money(cost))+
+        `<div class="material-card wide"><span class="material-helper">Drywall starts with wall area, subtracts any selected opening, adds waste, then rounds up to whole 4′ × 8′ sheets.</span></div>`;
+    }else{
+      const cost=requiredArea*price;
+      results.innerHTML=
+        card("Net Area",`${net.toFixed(1)} SF`)+
+        card("With Waste",`${requiredArea.toFixed(1)} SF`)+
+        card("Unit Price",money(price)+" / SF")+
+        card("Estimated Material Cost",money(cost))+
+        `<div class="material-card wide"><span class="material-helper">Area Material is for materials measured and priced by square foot. Openings are subtracted before the waste allowance is added.</span></div>`;
+    }
+  }
+  document.addEventListener("input",e=>{
+    if(e.target && e.target.matches("#toolFields input")) updateMaterial();
+  });
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("button");
+    if(!b)return;
+    const t=(b.innerText||b.textContent||"").trim().toLowerCase();
+    const tool=(b.getAttribute("data-tool")||"").toLowerCase();
+    if(t==="material" || tool==="waste"){
+      setTimeout(()=>{ensureMaterialSelector();configureFields();updateMaterial()},0);
+    }else if(/calculator|rise|stairs|roof|spacing/.test(t)){
+      setTimeout(()=>results.hidden=true,0);
+    }
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  const toolFields=document.getElementById("toolFields");
+  const results=document.getElementById("spacingResults");
+  if(!toolFields || !results) return;
+
+  function parseLengthLocal(raw){
+    let s=String(raw||"").replace(/[′’‘‛`]/g,"'").replace(/[″”“‟]/g,'"').replace(/\u00a0/g," ").trim();
+    if(!s) return NaN;
+    function mixed(t){
+      t=(t||"").trim();
+      if(!t)return 0;
+      if(t.includes(" ")){
+        const p=t.split(/\s+/); let v=parseFloat(p[0])||0;
+        if(p[1]&&p[1].includes("/")){const [a,b]=p[1].split("/").map(Number);if(b)v+=a/b}
+        return v;
+      }
+      if(t.includes("/")){const [a,b]=t.split("/").map(Number);return b?a/b:0}
+      return parseFloat(t)||0;
+    }
+    const fm=s.match(/(-?\d+(?:\.\d+)?)\s*'/);
+    const im=s.match(/(?:^|')\s*(-?\d+(?:\s+\d+\/\d+|\.\d+)?|-?\d+\/\d+)\s*"/);
+    if(fm){const ft=parseFloat(fm[1]); return ft+(im?mixed(im[1])/12:0)}
+    if(s.includes('"')) return mixed(s.replace('"',""))/12;
+    if(/^-?\d+(?:\.\d+)?$/.test(s)) return parseFloat(s);
+    return NaN;
+  }
+
+  function parseLen(raw){
+    try{
+      if(typeof parseToken==="function"){
+        const d=parseToken(raw);
+        if(d && typeof d.value==="number") return d.value;
+        if(d && typeof d.v==="number") return d.v;
+      }
+    }catch(e){}
+    return parseLengthLocal(raw);
+  }
+
+  function fmt(ft){
+    const units=(document.body&&document.body.dataset.units)||localStorage.getItem("bc-units")||"ftin";
+    if(units==="decimalft") return `${ft.toFixed(3).replace(/\.?0+$/,"")} ft`;
+    if(units==="inches") return `${(ft*12).toFixed(3).replace(/\.?0+$/,"")} in`;
+    try{ if(typeof fmtLength==="function") return fmtLength(ft); }catch(e){}
+    return `${ft.toFixed(3).replace(/\.?0+$/,"")} ft`;
+  }
+
+  function card(label,value){
+    return `<div class="material-card"><span class="material-label">${label}</span><span class="material-value">${value}</span></div>`;
+  }
+
+  function activeSpacing(){
+    return [...document.querySelectorAll(".tool-btn")].some(b=>{
+      const t=(b.innerText||b.textContent||"").trim().toLowerCase();
+      return b.classList.contains("active") && t==="spacing";
+    });
+  }
+
+  function findField(names){
+    for(const name of names){
+      const el=toolFields.querySelector(`[data-tool-field="${name}"]`);
+      if(el) return el;
+    }
+    return null;
+  }
+
+  function updateSpacingResults(){
+    if(!activeSpacing()){results.hidden=true; return;}
+
+    const lengthEl=findField(["length","wallLength","run","totalLength"]);
+    const spacingEl=findField(["spacing","oc","onCenter"]);
+    if(!lengthEl || !spacingEl){
+      results.hidden=true;
+      return;
+    }
+
+    const lengthFt=parseLen(lengthEl.value);
+    const spacingFt=parseLen(spacingEl.value);
+
+    if(window.__buildcalcShowOnlyResults) window.__buildcalcShowOnlyResults("spacing");
+    results.hidden=false;
+
+    if(!Number.isFinite(lengthFt) || !Number.isFinite(spacingFt) || lengthFt<=0 || spacingFt<=0){
+      results.innerHTML=`<div class="material-card wide"><span class="material-helper">Enter a valid layout length and spacing greater than 0.</span></div>`;
+      return;
+    }
+
+    const intervals=Math.floor(lengthFt/spacingFt);
+    const remainder=Math.max(0,lengthFt-(intervals*spacingFt));
+    const members=intervals+1; // includes the starting member at 0
+    const usedLength=intervals*spacingFt;
+
+    results.innerHTML=
+      card("Members Required",String(members))+
+      card("O.C. Spacing",fmt(spacingFt))+
+      card("Remaining Space",fmt(remainder))+
+      card("Layout Length",fmt(lengthFt))+
+      `<div class="material-card wide"><span class="material-helper">Members are laid out from the starting edge at the selected on-center spacing. The remainder shows any leftover distance after the last full spacing interval.</span></div>`;
+  }
+
+  document.addEventListener("input",e=>{
+    if(e.target && e.target.matches("#toolFields input")) updateSpacingResults();
+  });
+
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("button");
+    if(!b) return;
+    const t=(b.innerText||b.textContent||"").trim().toLowerCase();
+    const tool=(b.getAttribute("data-tool")||"").toLowerCase();
+
+    if(t==="spacing" || tool==="spacing"){
+      setTimeout(updateSpacingResults,0);
+    }else if(/calculator|material|rise|stairs|roof/.test(t)){
+      setTimeout(()=>results.hidden=true,0);
+    }
+  });
+})();
+</script>
+
+
+
+
+
+<script>
+(function(){
+  const rr=document.getElementById("riseRunResults");
+  const mr=document.getElementById("materialResults");
+  const sr=document.getElementById("spacingResults");
+  const learnToggle=document.getElementById("learnToggle");
+  const learnPanel=document.getElementById("learnPanel");
+
+  function activeToolName(){
+    const btn=document.querySelector(".tool-btn.active");
+    return btn ? (btn.textContent||"").trim().toLowerCase() : "calculator";
+  }
+
+  function showOnly(tool){
+    if(rr) rr.hidden = tool!=="rise/run";
+    if(mr) mr.hidden = tool!=="material";
+    if(sr) sr.hidden = tool!=="spacing";
+
+    if(tool!=="rise/run"){
+      if(learnToggle) learnToggle.hidden=true;
+      if(learnPanel) learnPanel.hidden=true;
+      if(learnToggle) learnToggle.setAttribute("aria-expanded","false");
+    }
+  }
+
+  window.__buildcalcShowOnlyResults = showOnly;
+
+  document.addEventListener("click",e=>{
+    const b=e.target.closest(".tool-btn");
+    if(!b) return;
+    const t=(b.textContent||"").trim().toLowerCase();
+    setTimeout(()=>showOnly(t),0);
+  });
+
+  document.addEventListener("DOMContentLoaded",()=>showOnly(activeToolName()));
+})();
+</script>
+
+
+<script>
+(function(){
+  function normalizeToolFromButton(btn){
+    if(!btn) return "calculator";
+    const tool=(btn.getAttribute("data-tool")||"").toLowerCase();
+    const text=(btn.textContent||"").trim().toLowerCase();
+    if(tool==="riserun" || text.includes("rise/run")) return "riserun";
+    if(tool==="waste" || text==="material") return "material";
+    if(tool==="spacing" || text==="spacing") return "spacing";
+    if(tool==="stairs" || text==="stairs") return "stairs";
+    if(tool==="roof" || text.includes("roof")) return "roof";
+    return "calculator";
+  }
+
+  function setGate(tool){
+    document.body.dataset.buildcalcTool=tool;
+
+    const rr=document.getElementById("riseRunResults");
+    const mr=document.getElementById("materialResults");
+    const sr=document.getElementById("spacingResults");
+    const lt=document.getElementById("learnToggle");
+    const lp=document.getElementById("learnPanel");
+
+    if(rr && tool!=="riserun") rr.hidden=true;
+    if(mr && tool!=="material") mr.hidden=true;
+    if(sr && tool!=="spacing") sr.hidden=true;
+
+    if(tool!=="riserun"){
+      if(lt){ lt.hidden=true; lt.setAttribute("aria-expanded","false"); }
+      if(lp) lp.hidden=true;
+    }
+  }
+
+  document.addEventListener("click", function(e){
+    const btn=e.target.closest(".tool-btn");
+    if(!btn) return;
+    const tool=normalizeToolFromButton(btn);
+
+    // Set immediately and again after legacy handlers run.
+    setGate(tool);
+    setTimeout(()=>setGate(tool),0);
+    setTimeout(()=>setGate(tool),50);
+  }, true);
+
+  window.addEventListener("load", function(){
+    const active=document.querySelector(".tool-btn.active");
+    setGate(normalizeToolFromButton(active));
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  const KEY="bc-appearance";
+  const root=document.documentElement;
+  const media=window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function savedMode(){
+    const v=localStorage.getItem(KEY)||"system";
+    return ["system","light","dark"].includes(v)?v:"system";
+  }
+
+  function resolvedTheme(mode){
+    if(mode==="dark") return "dark";
+    if(mode==="light") return "light";
+    return media && media.matches ? "dark" : "light";
+  }
+
+  function applyAppearance(mode){
+    root.dataset.bcAppearance=mode;
+    root.dataset.bcTheme=resolvedTheme(mode);
+    document.querySelectorAll("[data-appearance]").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.appearance===mode);
+      btn.setAttribute("aria-pressed",btn.dataset.appearance===mode?"true":"false");
+    });
+  }
+
+  function setAppearance(mode){
+    localStorage.setItem(KEY,mode);
+    applyAppearance(mode);
+  }
+
+  document.addEventListener("click",e=>{
+    const btn=e.target.closest("[data-appearance]");
+    if(!btn) return;
+    setAppearance(btn.dataset.appearance);
+  });
+
+  if(media){
+    const onChange=()=>{ if(savedMode()==="system") applyAppearance("system"); };
+    if(media.addEventListener) media.addEventListener("change",onChange);
+    else if(media.addListener) media.addListener(onChange);
+  }
+
+  // Apply immediately and again after settings render/open.
+  applyAppearance(savedMode());
+  document.addEventListener("click",e=>{
+    if(e.target.closest("#settingsBtn, [data-open-settings], .settings-btn")){
+      setTimeout(()=>applyAppearance(savedMode()),0);
+    }
+  });
+  window.__buildcalcApplyAppearance=applyAppearance;
+})();
+</script>
+
+
+<script>
+(function(){
+  const fields=document.getElementById("toolFields");
+  const panel=document.getElementById("toolInputPanel");
+  const viz=document.getElementById("constructionVisual") || document.querySelector(".visual-card svg");
+  if(!fields || !panel || !viz) return;
+
+  function f(name){return fields.querySelector('[data-tool-field="'+name+'"]')}
+  function len(raw){
+    try{
+      const d=parseToken(String(raw||""));
+      return d&&d.power===1?d.value:NaN;
+    }catch(e){return NaN}
+  }
+  function pitchValue(raw){
+    const s=String(raw||"").trim();
+    if(!s)return NaN;
+    const m=s.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*12$/);
+    if(m)return Number(m[1]);
+    const n=Number(s); return Number.isFinite(n)?n:NaN;
+  }
+  function card(label,value){
+    return '<div class="material-card"><span class="material-label">'+label+
+      '</span><span class="material-value">'+value+'</span></div>';
+  }
+  function ensureResults(id){
+    let el=document.getElementById(id);
+    if(el)return el;
+    el=document.createElement("section");
+    el.id=id;
+    el.className="material-results buildcalc-special-results";
+    panel.insertAdjacentElement("afterend",el);
+    return el;
+  }
+  function activeTool(){
+    const b=document.querySelector(".tool-btn.active");
+    return b ? b.dataset.tool : "";
+  }
+
+  function drawStairs(totalRise,targetRiser,tread){
+    const risers=Math.max(1,Math.round(totalRise/targetRiser));
+    const actual=totalRise/risers;
+    const treads=Math.max(1,risers-1);
+    const run=treads*tread;
+    const angle=Math.atan(actual/tread)*180/Math.PI;
+
+    const x=78,baseY=214,maxW=505,maxH=145;
+    const sc=Math.min(maxW/Math.max(run,.1),maxH/Math.max(totalRise,.1));
+    const sw=tread*sc,sh=actual*sc;
+    let path=`M ${x} ${baseY}`;
+    for(let i=0;i<treads;i++) path+=` H ${x+(i+1)*sw} V ${baseY-(i+1)*sh}`;
+    const endX=x+treads*sw,endY=baseY-treads*sh;
+    let h=svgDefs()+constructionTitle("STAIRS","Total rise → risers + treads");
+    h+=`<path d="${path}" fill="none" stroke="#222" stroke-width="2"/>`;
+    h+=`<line x1="${x}" y1="245" x2="${endX}" y2="245" stroke="#222" stroke-width="1.3"/>`;
+    h+=`<line x1="${x}" y1="238" x2="${x}" y2="252" stroke="#222" stroke-width="1.3"/>`;
+    h+=`<line x1="${endX}" y1="238" x2="${endX}" y2="252" stroke="#222" stroke-width="1.3"/>`;
+    h+=`<text x="${(x+endX)/2}" y="267" text-anchor="middle" class="segment-label">Run ${esc(fmtLength(run))}</text>`;
+    const dx=Math.min(620,endX+25);
+    h+=`<line x1="${dx}" y1="${baseY}" x2="${dx}" y2="${endY}" stroke="#222" stroke-width="1.3"/>`;
+    h+=`<text x="${dx+18}" y="${(baseY+endY)/2}" class="segment-label" transform="rotate(-90 ${dx+18} ${(baseY+endY)/2})">Rise ${esc(fmtLength(totalRise))}</text>`;
+    h+=`<text x="350" y="40" text-anchor="middle" class="total-label">${risers} risers • ${treads} treads • ${angle.toFixed(1)}°</text>`;
+    viz.innerHTML=h;
+    return {risers,actual,treads,run,angle};
+  }
+
+  function updateStairsModern(){
+    if(activeTool()!=="stairs")return;
+    const tr=len(f("totalRise")?.value), rr=len(f("riser")?.value), td=len(f("tread")?.value);
+    const out=ensureResults("stairsResults");
+    if(!(tr>0&&rr>0&&td>0)){
+      out.innerHTML='<div class="material-card wide"><span class="material-helper">Enter Total Rise, Desired Riser, and Tread Depth.</span></div>';
+      return;
+    }
+    const r=drawStairs(tr,rr,td);
+    out.innerHTML=card("Risers",String(r.risers))+card("Actual Riser",fmtLength(r.actual))+
+      card("Treads",String(r.treads))+card("Total Run",fmtLength(r.run));
+  }
+
+  function drawRoof(run,pitch,overhang){
+    const slope=pitch/12;
+    const rise=run*slope;
+    const common=Math.sqrt(run*run+rise*rise);
+    const fullRun=run+overhang;
+    const fullRise=fullRun*slope;
+    const withOH=Math.sqrt(fullRun*fullRun+fullRise*fullRise);
+    const angle=Math.atan(slope)*180/Math.PI;
+
+    const x=120,baseY=210,runPx=430;
+    const risePx=Math.max(28,Math.min(145,runPx*slope));
+    const ridgeX=x+runPx,ridgeY=baseY-risePx;
+    let h=svgDefs()+constructionTitle("ROOF / RAFTER","Run + pitch → rafter length");
+    h+=`<polygon points="${x},${baseY} ${ridgeX},${baseY} ${ridgeX},${ridgeY}" fill="url(#woodHatch)" opacity=".18"/>`;
+    h+=`<line x1="${x}" y1="${baseY}" x2="${ridgeX}" y2="${baseY}" stroke="#222" stroke-width="1.8"/>`;
+    h+=`<line x1="${ridgeX}" y1="${baseY}" x2="${ridgeX}" y2="${ridgeY}" stroke="#222" stroke-width="1.8"/>`;
+    h+=`<line x1="${x}" y1="${baseY}" x2="${ridgeX}" y2="${ridgeY}" stroke="#222" stroke-width="2.3"/>`;
+    h+=`<text x="${(x+ridgeX)/2}" y="244" text-anchor="middle" class="segment-label">Run ${esc(fmtLength(run))}</text>`;
+    h+=`<text x="${ridgeX+20}" y="${(baseY+ridgeY)/2}" class="segment-label" transform="rotate(-90 ${ridgeX+20} ${(baseY+ridgeY)/2})">Rise ${esc(fmtLength(rise))}</text>`;
+    h+=`<text x="350" y="40" text-anchor="middle" class="total-label">${pitch.toFixed(2).replace(/\.00$/,"")}:12 • ${angle.toFixed(1)}°</text>`;
+    viz.innerHTML=h;
+    return {rise,common,withOH,angle};
+  }
+
+  function updateRoofModern(){
+    if(activeTool()!=="roof")return;
+    const run=len(f("roofRun")?.value), p=pitchValue(f("pitch")?.value);
+    const ohRaw=f("overhang")?.value||"";
+    const oh=ohRaw.trim()?len(ohRaw):0;
+    const out=ensureResults("roofResults");
+    if(!(run>0&&Number.isFinite(p)&&p>=0&&Number.isFinite(oh)&&oh>=0)){
+      out.innerHTML='<div class="material-card wide"><span class="material-helper">Enter a valid Run and Pitch such as 6/12. Overhang is optional.</span></div>';
+      return;
+    }
+    const r=drawRoof(run,p,oh);
+    out.innerHTML=card("Rafter Length",fmtLength(r.common))+card("Rise",fmtLength(r.rise))+
+      card("Angle",r.angle.toFixed(1)+"°")+card("With Overhang",fmtLength(r.withOH));
+  }
+
+  function updateSpacingModern(){
+    if(activeTool()!=="spacing")return;
+    const L=len(f("layoutLength")?.value), oc=len(f("oc")?.value);
+    const out=document.getElementById("spacingResults")||ensureResults("spacingResults");
+    if(!(L>0&&oc>0)){
+      out.innerHTML='<div class="material-card wide"><span class="material-helper">Enter Total Length and O.C. Spacing.</span></div>';
+      return;
+    }
+    const intervals=Math.floor(L/oc);
+    const members=intervals+1;
+    const used=intervals*oc;
+    const rem=Math.max(0,L-used);
+    out.innerHTML=card("Members Required",String(members))+card("O.C. Spacing",fmtLength(oc))+
+      card("Remaining Space",fmtLength(rem))+card("Layout Length",fmtLength(L));
+
+    const x=105,y1=83,y2=220,w=455;
+    let h=svgDefs()+constructionTitle("SPACING","On-center layout");
+    h+=`<rect x="${x}" y="${y1-8}" width="${w}" height="7" fill="url(#woodHatch)" stroke="#777" stroke-width="1"/>`;
+    h+=`<rect x="${x}" y="${y2}" width="${w}" height="7" fill="url(#woodHatch)" stroke="#777" stroke-width="1"/>`;
+    const drawMembers=Math.max(2,Math.min(members,18));
+    for(let i=0;i<drawMembers;i++){
+      const sx=x+w*(i/(drawMembers-1));
+      h+=`<rect x="${sx-3}" y="${y1}" width="6" height="${y2-y1}" fill="url(#woodHatch)" stroke="#666" stroke-width=".8"/>`;
+    }
+    h+=dimArrowH(x,x+w,57,fmtLength(L));
+    h+=`<text x="350" y="260" text-anchor="middle" class="segment-label">${esc(fmtLength(oc))} O.C. • ${members} members</text>`;
+    viz.innerHTML=h;
+  }
+
+  function updateCurrent(){
+    updateStairsModern(); updateRoofModern(); updateSpacingModern();
+  }
+
+  fields.addEventListener("input",()=>setTimeout(updateCurrent,0));
+  fields.addEventListener("change",()=>setTimeout(updateCurrent,0));
+  document.addEventListener("click",e=>{
+    if(e.target.closest(".tool-btn")) setTimeout(updateCurrent,20);
+    if(e.target.closest("[data-key]")) setTimeout(updateCurrent,0);
+  });
+  document.addEventListener("touchend",e=>{
+    if(e.target.closest(".tool-btn")) setTimeout(updateCurrent,25);
+  },{passive:true});
+
+  window.__buildcalcUpdateSpecialTools=updateCurrent;
+})();
+</script>
+
+
+<script>
+(function(){
+  let meta=document.querySelector('meta[name="theme-color"]');
+  if(!meta){meta=document.createElement("meta");meta.name="theme-color";document.head.appendChild(meta);}
+  function sync(){
+    meta.content=document.documentElement.dataset.bcTheme==="dark"?"#151618":"#ffffff";
+  }
+  sync();
+  const mo=new MutationObserver(sync);
+  mo.observe(document.documentElement,{attributes:true,attributeFilter:["data-bc-theme"]});
+})();
+</script>
+
+
+<script>
+(function(){
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+    window.addEventListener("load",()=>{
+      navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
